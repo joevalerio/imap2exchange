@@ -1,7 +1,3 @@
-package edu.yale.its.tp.email.conversion.imap;
-
-import java.util.*;
-
 /**
  * <pre>
  * Copyright (c) 2000-2003 Yale University. All rights reserved.
@@ -36,9 +32,17 @@ import java.util.*;
  * </pre>
  *
  */
+package edu.yale.its.tp.email.conversion.imap;
+
+import java.util.*;
+
+import edu.yale.its.tp.email.conversion.util.Matcher;
+import edu.yale.its.tp.email.conversion.util.StringEqualsMatcher;
+
 public class FolderAltNames {
 
 	List<FolderAltName> altNames;
+	Matcher altNamesMatcher = new StringEqualsMatcher();
 
 	public List<FolderAltName> getAltNames() {
 		return altNames;
@@ -50,11 +54,34 @@ public class FolderAltNames {
 	
 	public FolderAltName getFolderAltName(String imapFolderName){
 		for(FolderAltName altName : altNames){
-			if(altName.contains(imapFolderName)){
+			if(contains(altName,  imapFolderName)){
 				return altName;
 			} 
 		}
 		return null;
+	}
+	
+	protected boolean contains(FolderAltName altName, String imapFolderName){
+		for(String folderNameExpression : altName.getImapFolderNames()){
+			if(altNamesMatcher.matches(folderNameExpression, imapFolderName)){
+				return true;
+			}
+		}
+		return false; 
+	}
+	
+	/**
+	 * @return the altNamesMatcher
+	 */
+	public Matcher getAltNamesMatcher() {
+		return altNamesMatcher;
+	}
+
+	/**
+	 * @param altNamesMatcher the altNamesMatcher to set
+	 */
+	public void setAltNamesMatcher(Matcher altNamesMatcher) {
+		this.altNamesMatcher = altNamesMatcher;
 	}
 	
 }

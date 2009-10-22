@@ -62,13 +62,4 @@ public class FolderAltName {
 		this.imapFolderNames = imapFolderNames;
 	}
 	
-	public boolean contains(String imapFolderName){
-		for(String folderName : imapFolderNames){
-			if(folderName.equalsIgnoreCase(imapFolderName)){
-				return true;
-			}
-		}
-		return false; 
-	}
-	
 }

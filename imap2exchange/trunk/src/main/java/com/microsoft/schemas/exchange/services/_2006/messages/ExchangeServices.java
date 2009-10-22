@@ -8,7 +8,7 @@ import javax.xml.namespace.QName;
 import javax.xml.ws.Service;
 import javax.xml.ws.WebEndpoint;
 import javax.xml.ws.WebServiceClient;
-import javax.xml.ws.WebServiceFeature;
+//import javax.xml.ws.WebServiceFeature;
 
 
 /**
@@ -102,9 +102,9 @@ public class ExchangeServices
      * @return
      *     returns ExchangeServicePortType
      */
-    @WebEndpoint(name = "ExchangeServicePort")
-    public ExchangeServicePortType getExchangeServicePort(WebServiceFeature... features) {
-        return super.getPort(new QName("http://schemas.microsoft.com/exchange/services/2006/messages", "ExchangeServicePort"), ExchangeServicePortType.class, features);
-    }
+//    @WebEndpoint(name = "ExchangeServicePort")
+//    public ExchangeServicePortType getExchangeServicePort(WebServiceFeature... features) {
+//        return super.getPort(new QName("http://schemas.microsoft.com/exchange/services/2006/messages", "ExchangeServicePort"), ExchangeServicePortType.class, features);
+//    }
 
 }
