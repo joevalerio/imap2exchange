@@ -1,8 +1,8 @@
 ==Introduction==
 
 This is an attempt to explain how the imap2exchange conversion works so that users can see how to extend Yale's implementation to fit their own needs.
-{{{
-Useful Information
+
+*Useful Information*
 
   This conversion utility can be run again and again against the same data, and it will 
   only apply changes.  Every message is given a uid to determine what po it came from, as 
@@ -10,39 +10,38 @@ Useful Information
   conversion utility on a working exchange mailbox without modifying or deleting messages 
   not contained in the source Mailbox.  You could even merge multiple source mailboxes 
   into one exchange account...
-}}}
-{{{
-WARNING - Use of Spring
-  I rely on the use of [Sping|http://www.springframework.org] but I use it very lightly, 
+
+*WARNING - Use of Spring*
+  I rely on the use of [http://www.springframework.org Spring] but I use it very lightly, 
   only to initialize my environment, and allow others to more easily substitute there 
   implementations for mine.  So if you have been living under a rock and have never heard 
   of Spring, please go check it out [http://www.springframework.org here].  
-}}}
-
-h2. Key Players
-
-|| Class || Description ||
-| ExchangeConversionManager | The ExchangeConversionManager is the controller of all conversions.  This class contains a [ThreadPoolExceutor|http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/util/concurrent/ThreadPoolExecutor.html] that uses an [ArrayBlockingQueue|http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/util/concurrent/ArrayBlockingQueue.html] to queue conversions.  Since the conversion is of email(Text), there is the very real possibility of blowing out the JVM.  For this purpose we are using this method to maximize the number of concurrent conversions, while minimizing the risk of an [OutOfMemoryError|http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/lang/OutOfMemoryError.html]. |
-| ExchangeConversion | The ExchangeConversion is a Runnable object that contains all the information need to convert a single users mail from a source IMAP store to a destination Exchange Store. |
-| User | The object that contains information for the ExchangeConversion to use.  There is a one to one relationship between a User and a ExchangeConversion. |
-| FolderSynchronizer | The FolderSynchronizer uses a MessageSynchronizer to synchronize messages at the current folder level, and also synchronizes sub-folders. |
-| MessageSynchronizer | Synchronizes messages on the destination mail store from the source mail store.  It will create messages that don't exist on the destination, update changes to message read status, and remove messages from the destination if they have been removed from the source. |
-| UserFacotry | Makes Users |
-| ImapServerFactory | Makes ImapServers |
-| ExchangeConversionFactory | Makes ExchangeConversion Runnables |
-
-h2. How it works
 
 
-h3. I. Create a User.
+==Key Players==
+
+|| *Class* || *Description* ||
+|| ExchangeConversionManager || The ExchangeConversionManager is the controller of all conversions.  This class contains a [ThreadPoolExceutor|http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/util/concurrent/ThreadPoolExecutor.html] that uses an [ArrayBlockingQueue|http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/util/concurrent/ArrayBlockingQueue.html] to queue conversions.  Since the conversion is of email(Text), there is the very real possibility of blowing out the JVM.  For this purpose we are using this method to maximize the number of concurrent conversions, while minimizing the risk of an [OutOfMemoryError|http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/lang/OutOfMemoryError.html]. ||
+|| ExchangeConversion || The ExchangeConversion is a Runnable object that contains all the information need to convert a single users mail from a source IMAP store to a destination Exchange Store. ||
+|| User || The object that contains information for the ExchangeConversion to use.  There is a one to one relationship between a User and a ExchangeConversion. ||
+|| FolderSynchronizer || The FolderSynchronizer uses a MessageSynchronizer to synchronize messages at the current folder level, and also synchronizes sub-folders. ||
+|| MessageSynchronizer || Synchronizes messages on the destination mail store from the source mail store.  It will create messages that don't exist on the destination, update changes to message read status, and remove messages from the destination if they have been removed from the source. ||
+|| UserFacotry || Makes Users ||
+|| ImapServerFactory || Makes ImapServers ||
+|| ExchangeConversionFactory || Makes ExchangeConversion Runnables ||
+
+==How it works==
+
+
+=== I. Create a User.===
 
 Users are created from a UserFactory(YaleUserFactory) and their interface has the following properties:
-|| Property || Description ||
-| uid | set by our implemented UserFactory |
-| SourceImapPo | set by our implemented UserFactory |
-| UPN | In our implementation this is set during the UserSetupAction prior to the preConversionAction |
-| primarySMTPAddress | In our implementation this is set during the UserSetupAction prior to the preConversionAction |
-| Conversion | set in ExchangeConversionFactory |
+|| *Property* || *Description* ||
+|| uid || set by our implemented UserFactory ||
+|| SourceImapPo || set by our implemented UserFactory ||
+|| UPN || In our implementation this is set during the UserSetupAction prior to the preConversionAction ||
+|| primarySMTPAddress || In our implementation this is set during the UserSetupAction prior to the preConversionAction ||
+|| Conversion || set in ExchangeConversionFactory ||
 
 h3. II. Create an ExchangeConversion
 
