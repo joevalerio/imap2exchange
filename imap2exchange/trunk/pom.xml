@@ -5,7 +5,7 @@
 	<groupId>edu.yale.its.tp.mail</groupId>
 	<artifactId>imap2exchange</artifactId>
 	<name>imap2exchange</name>
-	<version>1.3.1</version>
+	<version>1.3.2-SNAPSHOT</version>
 	<description>imap2exchange</description>
 	<build>
 		<plugins>
