@@ -118,5 +118,5 @@ Next we need to compare the metadata of messages that we have already moved.  If
 If messages are removed from the source folder, then they will be removed from the destination folder  If a message was marked deleted and before the next run the folder was purged, and the original destination folder would have been "Deleted Items", and it will be removed.
 
 
-=== D. PostConversionAction===
+==== D. PostConversionAction====
 This is another point cut for users that want to perform some action post conversion.  If you want to perform some sort of mailbox verification, or normalization, it can be executed here.
