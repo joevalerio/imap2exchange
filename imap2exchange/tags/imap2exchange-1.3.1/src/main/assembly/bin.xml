@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<assembly>
+   <id>bin</id>
+   <formats>
+      <format>tar.gz</format>
+   </formats>
+   <includeBaseDirectory>false</includeBaseDirectory>
+   <fileSets>
+      <fileSet>
+         <directory>target/imap2exchange</directory>
+         <outputDirectory>imap2exchange</outputDirectory>
+      </fileSet>
+      <fileSet>
+         <directory>src/main/resources/bin</directory>
+         <outputDirectory>imap2exchange/bin</outputDirectory>
+      </fileSet>
+      <fileSet>
+         <directory>src/main/resources/config</directory>
+         <outputDirectory>imap2exchange/config</outputDirectory>
+      </fileSet>
+   </fileSets>
+</assembly>
