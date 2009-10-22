@@ -2,7 +2,6 @@ package edu.yale.its.tp.email.conversion.yale;
 
 import java.util.*;
 import javax.mail.*;
-import java.security.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 

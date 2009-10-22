@@ -125,16 +125,16 @@ public class MessageUtil {
 	 * @return
 	 * @throws MessagingException
 	 */
-	public static List<String> getMessageUIDs(User user, List<Message> messages) throws MessagingException {
+	public static List<String> getMessageUIDs(List<Message> messages) throws MessagingException {
 		List<String> ids = new ArrayList<String>();
 		for(Message message : messages){
-			ids.add(getMessageUID(user, message));
+			ids.add(getMessageUID(message));
 		}
 		return ids;
 	}
 
-	public static String getFolderUid(User user, Folder folder){
-		return user.getSourceImapPo()
+	public static String getFolderUid(Folder folder){
+		return ExchangeConversion.getConv().getUser().getSourceImapPo()
 		     + UID_SEPERATOR
 		     + folder.getFullName() 
 		     + UID_SEPERATOR;
@@ -146,10 +146,10 @@ public class MessageUtil {
 	 * @return
 	 * @throws MessagingException
 	 */
-	public static String getMessageUID(User user, Message message) throws MessagingException{
+	public static String getMessageUID(Message message) throws MessagingException{
 		IMAPFolder folder = (IMAPFolder)message.getFolder();
 		if(!folder.isOpen()) folder.open(Folder.READ_ONLY);
-		return  getFolderUid(user, message.getFolder()) 
+		return  getFolderUid(message.getFolder()) 
 			  + String.valueOf(folder.getUID(message));
 	}
 
@@ -199,8 +199,8 @@ public class MessageUtil {
 	 * @return
 	 * @throws MessagingException
 	 */
-	public static List<MessageType> removeMessagesFromMessageTypes(User user, List<MessageType> messageTypes, List<Message> messages) throws MessagingException{
-		return removeIdsFromMessageTypes(messageTypes, getMessageUIDs(user, messages));
+	public static List<MessageType> removeMessagesFromMessageTypes(List<MessageType> messageTypes, List<Message> messages) throws MessagingException{
+		return removeIdsFromMessageTypes(messageTypes, getMessageUIDs(messages));
 	}
 	
 	/**
@@ -211,8 +211,8 @@ public class MessageUtil {
 	 * @return
 	 * @throws MessagingException
 	 */
-	public static List<Message> removeMessageTypesFromMessages(User user, List<Message> messages, List<MessageType> messageTypes) throws MessagingException{
-		return removeIdsFromMessages(user, messages, getMessageTypeUIDs(messageTypes));
+	public static List<Message> removeMessageTypesFromMessages(List<Message> messages, List<MessageType> messageTypes) throws MessagingException{
+		return removeIdsFromMessages(messages, getMessageTypeUIDs(messageTypes));
 	}
 	
 	/**
@@ -254,10 +254,10 @@ public class MessageUtil {
 	 * @return
 	 * @throws MessagingException
 	 */
-	public static List<Message> removeIdsFromMessages(User user, List<Message> messages, List<String> ids) throws MessagingException{
+	public static List<Message> removeIdsFromMessages(List<Message> messages, List<String> ids) throws MessagingException{
 		List<Message> keptMessages = new ArrayList<Message>();
 		for(Message message : messages){
-			if(!ids.contains(getMessageUID(user, message))){
+			if(!ids.contains(getMessageUID(message))){
 				keptMessages.add(message);
 			}
 		}
@@ -271,10 +271,10 @@ public class MessageUtil {
 	 * @return
 	 * @throws MessagingException
 	 */
-	public static List<Message> keepIdsFromMessages(User user, List<Message> messages, List<String> ids) throws MessagingException{
+	public static List<Message> keepIdsFromMessages(List<Message> messages, List<String> ids) throws MessagingException{
 		List<Message> keptMessages = new ArrayList<Message>();
 		for(Message message : messages){
-			if(ids.contains(getMessageUID(user, message))){
+			if(ids.contains(getMessageUID(message))){
 				keptMessages.add(message);
 			}
 		}
@@ -290,10 +290,10 @@ public class MessageUtil {
 	 * @throws MessagingException
 	 * @throws IOException
 	 */
-	public static List<MessageType> createMessagesInExchange(User user, List<Message> messages,  BaseFolderIdType folderId) throws MessagingException, IOException{
+	public static List<MessageType> createMessagesInExchange(List<Message> messages,  BaseFolderIdType folderId) throws MessagingException, IOException{
 		if(messages == null || messages.isEmpty()) return new ArrayList<MessageType>();
-		NonEmptyArrayOfAllItemsType convertedMessages = convertMessagesToMessageTypesSerially(user, messages);
-		return createMessagesInExchange(user, convertedMessages, folderId, messages);
+		NonEmptyArrayOfAllItemsType convertedMessages = convertMessagesToMessageTypesSerially(messages);
+		return createMessagesInExchange(convertedMessages, folderId, messages);
 	}
 	
 	/**
@@ -303,8 +303,7 @@ public class MessageUtil {
 	 * @param folderId
 	 * @return
 	 */
-	private static List<MessageType> createMessagesInExchange(User user
-			                                                , NonEmptyArrayOfAllItemsType itemsArray
+	private static List<MessageType> createMessagesInExchange(NonEmptyArrayOfAllItemsType itemsArray
 			                                                , BaseFolderIdType folderId
 			                                                , List<Message> sourceMessages){
 
@@ -329,17 +328,18 @@ public class MessageUtil {
 		ServerVersionInfo serverVersion = new ServerVersionInfo();
 		Holder<ServerVersionInfo> serverVersionHolder = new Holder<ServerVersionInfo>(serverVersion);
 
+		User user = ExchangeConversion.getConv().getUser();
 		ExchangeServicePortType proxy = null;
 		List<JAXBElement <? extends ResponseMessageType>> responses = null;
 		try{
-			user.getConversion().getReport().start(Report.EXCHANGE_CONNECT);
+			Report.getReport().start(Report.EXCHANGE_CONNECT);
 			proxy = ExchangeServerPortFactory.getInstance().getExchangeServerPort();
-			user.getConversion().getReport().stop(Report.EXCHANGE_CONNECT);
-			user.getConversion().getReport().start(Report.EXCHANGE_MIME);
+			Report.getReport().stop(Report.EXCHANGE_CONNECT);
+			Report.getReport().start(Report.EXCHANGE_MIME);
 			proxy.createItem(creator, user.getImpersonation() ,responseHolder, serverVersionHolder);
 			responses = responseHolder.value.getResponseMessages()
                        .getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage();
-			user.getConversion().getReport().stop(Report.EXCHANGE_MIME);
+			Report.getReport().stop(Report.EXCHANGE_MIME);
 			int i = 0;
 			for(JAXBElement <? extends ResponseMessageType> jaxResponse : responses){
 				ResponseMessageType response = jaxResponse.getValue();
@@ -366,10 +366,10 @@ public class MessageUtil {
 		} catch (Exception e){
 			throw new RuntimeException("Exception creating messages on Exchange Server", e);
 		} finally {
-			if(user.getConversion().getReport().isStarted(Report.EXCHANGE_MIME))
-				user.getConversion().getReport().stop(Report.EXCHANGE_MIME);
-			if(user.getConversion().getReport().isStarted(Report.EXCHANGE_CONNECT))
-				user.getConversion().getReport().stop(Report.EXCHANGE_CONNECT);
+			if(Report.getReport().isStarted(Report.EXCHANGE_MIME))
+				Report.getReport().stop(Report.EXCHANGE_MIME);
+			if(Report.getReport().isStarted(Report.EXCHANGE_CONNECT))
+				Report.getReport().stop(Report.EXCHANGE_CONNECT);
 		} 
 		
 		return messages;
@@ -381,10 +381,10 @@ public class MessageUtil {
 	 * @param message
 	 * @return
 	 */
-	public static MessageType getCompleteMessage(User user, MessageType message){
+	public static MessageType getCompleteMessage(MessageType message){
 		List<MessageType> items = new ArrayList<MessageType>();
 		items.add(message);
-		return getCompleteMessages(user, items).get(0);		
+		return getCompleteMessages(items).get(0);		
 	}
 	
 	/**
@@ -393,12 +393,12 @@ public class MessageUtil {
 	 * @param messages
 	 * @return
 	 */
-	public static List<MessageType> getCompleteMessages(User user, List<MessageType> messages){
+	public static List<MessageType> getCompleteMessages(List<MessageType> messages){
 		List<BaseItemIdType> ids = new ArrayList<BaseItemIdType>();
 		for(ItemType item : messages){
 			ids.add(item.getItemId());
 		}
-		return getCompleteMessagesFromIds(user, ids);
+		return getCompleteMessagesFromIds(ids);
 	}
 	
 	/**
@@ -407,12 +407,12 @@ public class MessageUtil {
 	 * @param messageIds
 	 * @return
 	 */
-	public static List<MessageType> getCompleteMessagesFromIds(User user, List<BaseItemIdType> messageIds){
+	public static List<MessageType> getCompleteMessagesFromIds(List<BaseItemIdType> messageIds){
 		if(messageIds == null || messageIds.isEmpty()) return new ArrayList<MessageType>();
 		NonEmptyArrayOfBaseItemIdsType idsArray = new NonEmptyArrayOfBaseItemIdsType();
 		List<BaseItemIdType> ids = idsArray.getItemIdOrOccurrenceItemIdOrRecurringMasterItemId();
 		ids.addAll(messageIds);
-		return getCompleteMessages(user, idsArray);		
+		return getCompleteMessages(idsArray);		
 	}
 
 	/**
@@ -421,7 +421,7 @@ public class MessageUtil {
 	 * @param ids
 	 * @return
 	 */
-	private static List<MessageType> getCompleteMessages(User user, NonEmptyArrayOfBaseItemIdsType ids){
+	private static List<MessageType> getCompleteMessages(NonEmptyArrayOfBaseItemIdsType ids){
 		List<MessageType> messages = new ArrayList<MessageType>();
 		
 		ItemResponseShapeType itemShape = new ItemResponseShapeType();		
@@ -438,17 +438,18 @@ public class MessageUtil {
 		ServerVersionInfo serverVersion = new ServerVersionInfo();
 		Holder<ServerVersionInfo> serverVersionHolder = new Holder<ServerVersionInfo>(serverVersion);
 
+		User user = ExchangeConversion.getConv().getUser();
 		ExchangeServicePortType proxy = null;
 		List<JAXBElement <? extends ResponseMessageType>> responses = null;
 		try{
-			user.getConversion().getReport().start(Report.EXCHANGE_CONNECT);
+			Report.getReport().start(Report.EXCHANGE_CONNECT);
 			proxy = ExchangeServerPortFactory.getInstance().getExchangeServerPort();
-			user.getConversion().getReport().stop(Report.EXCHANGE_CONNECT);
-			user.getConversion().getReport().start(Report.EXCHANGE_META);
+			Report.getReport().stop(Report.EXCHANGE_CONNECT);
+			Report.getReport().start(Report.EXCHANGE_META);
 			proxy.getItem(getter, user.getImpersonation() ,responseHolder, serverVersionHolder);
 			responses = responseHolder.value.getResponseMessages()
 			           .getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage();
-			user.getConversion().getReport().stop(Report.EXCHANGE_META);
+			Report.getReport().stop(Report.EXCHANGE_META);
 			
 			for(JAXBElement <? extends ResponseMessageType> jaxResponse : responses){
 				ResponseMessageType response = jaxResponse.getValue();
@@ -467,10 +468,10 @@ public class MessageUtil {
 		} catch (Exception e){
 			throw new RuntimeException("Exception gettting the Exchange Message body", e);
 		} finally {
-			if(user.getConversion().getReport().isStarted(Report.EXCHANGE_META))
-				user.getConversion().getReport().stop(Report.EXCHANGE_META);
-			if(user.getConversion().getReport().isStarted(Report.EXCHANGE_CONNECT))
-				user.getConversion().getReport().stop(Report.EXCHANGE_CONNECT);
+			if(Report.getReport().isStarted(Report.EXCHANGE_META))
+				Report.getReport().stop(Report.EXCHANGE_META);
+			if(Report.getReport().isStarted(Report.EXCHANGE_CONNECT))
+				Report.getReport().stop(Report.EXCHANGE_CONNECT);
 		} 
 		
 		return messages;
@@ -482,7 +483,7 @@ public class MessageUtil {
 	 * @return
 	 * @throws MessagingException
 	 */
-	protected static MessageType createMessageType(User user, Message message) throws MessagingException{
+	protected static MessageType createMessageType(Message message) throws MessagingException{
 
 		MessageType messageType = new MessageType();
 		
@@ -496,7 +497,7 @@ public class MessageUtil {
 		 */
 		ExtendedPropertyType conversionUid = new ExtendedPropertyType();
 		conversionUid.setExtendedFieldURI(conversionUidUri);
-		conversionUid.setValue(MessageUtil.getMessageUID(user, message));
+		conversionUid.setValue(MessageUtil.getMessageUID(message));
 		
 		/*
 		 * Define Exchange Extened Prop UID for the new Message
@@ -553,23 +554,23 @@ public class MessageUtil {
 	 * @return
  * @throws MessagingException	 * @throws IOException
 	 */
-	public static NonEmptyArrayOfAllItemsType convertMessagesToMessageTypesSerially(User user, List<Message> sourceMessages) throws MessagingException, IOException{
+	public static NonEmptyArrayOfAllItemsType convertMessagesToMessageTypesSerially(List<Message> sourceMessages) throws MessagingException, IOException{
 		NonEmptyArrayOfAllItemsType returnList = new NonEmptyArrayOfAllItemsType();
 		if(sourceMessages == null || sourceMessages.isEmpty()) throw new IllegalArgumentException("sourceMessages can not be null nor empty.");
 		List<ItemType> destMessages = returnList.getItemOrMessageOrCalendarItem();
 		ByteArrayOutputStream baos = null;
 		BASE64EncoderStream b64es = null;
-		ExchangeConversion conv = user.getConversion();
+		ExchangeConversion conv = ExchangeConversion.getConv();
 		for(Message sourceMessage : sourceMessages){
 			try{
 				
 				// Create the Destination Message and set Props before I set the mime-content...
-				MessageType destMessage = createMessageType(user, sourceMessage);
+				MessageType destMessage = createMessageType(sourceMessage);
 
 				// Convert MimeContent to Base64 and add it to the message.
 				baos = new ByteArrayOutputStream();
 				b64es = new  BASE64EncoderStream(baos);
-				user.getConversion().getReport().start(Report.IMAP_MIME);
+				Report.getReport().start(Report.IMAP_MIME);
 				
 				// Check to see if the message has a received header, add one if missing
 				// This makes Exchange set the received date to the correct date and not the
@@ -595,7 +596,7 @@ public class MessageUtil {
 				sourceMessage.writeTo(b64es);
 				b64es.flush();
 				
-				user.getConversion().getReport().stop(Report.IMAP_MIME);
+				Report.getReport().stop(Report.IMAP_MIME);
 				
 				MimeContentType mime = new MimeContentType();
 				mime.setValue(baos.toString());
@@ -613,7 +614,7 @@ public class MessageUtil {
 				 * looked at post conversion.
 				 */ 
 				logger.warn("Error getting message source MIME content.", e);
-				user.getConversion().warnings++;
+				conv.warnings++;
 			}
 
 		}
@@ -627,7 +628,7 @@ public class MessageUtil {
 	 * @param disposalType
 	 * @return
 	 */
-	public static List<MessageType> deleteMessages(User user, List<MessageType> messages, DisposalType disposalType){
+	public static List<MessageType> deleteMessages(List<MessageType> messages, DisposalType disposalType){
 
 		if(messages == null || messages.isEmpty()) return null;
 		
@@ -649,17 +650,18 @@ public class MessageUtil {
 		ServerVersionInfo serverVersion = new ServerVersionInfo();
 		Holder<ServerVersionInfo> serverVersionHolder = new Holder<ServerVersionInfo>(serverVersion);
 
+		User user = ExchangeConversion.getConv().getUser();
 		ExchangeServicePortType proxy = null;
 		List<JAXBElement <? extends ResponseMessageType>> responses = null;
 		try{
-			user.getConversion().getReport().start(Report.EXCHANGE_CONNECT);
+			Report.getReport().start(Report.EXCHANGE_CONNECT);
 			proxy = ExchangeServerPortFactory.getInstance().getExchangeServerPort();
-			user.getConversion().getReport().stop(Report.EXCHANGE_CONNECT);
-			user.getConversion().getReport().start(Report.EXCHANGE_META);
+			Report.getReport().stop(Report.EXCHANGE_CONNECT);
+			Report.getReport().start(Report.EXCHANGE_META);
 			proxy.deleteItem(deleter, user.getImpersonation() ,responseHolder, serverVersionHolder);
 			responses = responseHolder.value.getResponseMessages()
 			           .getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage();
-			user.getConversion().getReport().stop(Report.EXCHANGE_META);
+			Report.getReport().stop(Report.EXCHANGE_META);
 			                 
 			for(JAXBElement <? extends ResponseMessageType> jaxResponse : responses){
 				ResponseMessageType response = jaxResponse.getValue();
@@ -678,10 +680,10 @@ public class MessageUtil {
 		} catch (Exception e){
 			throw new RuntimeException("Exception deleting messages", e);
 		} finally {
-			if(user.getConversion().getReport().isStarted(Report.EXCHANGE_META))
-				user.getConversion().getReport().stop(Report.EXCHANGE_META);
-			if(user.getConversion().getReport().isStarted(Report.EXCHANGE_CONNECT))
-				user.getConversion().getReport().stop(Report.EXCHANGE_CONNECT);
+			if(Report.getReport().isStarted(Report.EXCHANGE_META))
+				Report.getReport().stop(Report.EXCHANGE_META);
+			if(Report.getReport().isStarted(Report.EXCHANGE_CONNECT))
+				Report.getReport().stop(Report.EXCHANGE_CONNECT);
 		} 
 		
 		return messages;
@@ -693,7 +695,7 @@ public class MessageUtil {
 	 * @param folderId
 	 * @return
 	 */
-	public static List<MessageType> getMessages(User user, BaseFolderIdType folderId){
+	public static List<MessageType> getMessages(BaseFolderIdType folderId){
 		
 		FindItemType finder = new FindItemType();
 	
@@ -730,18 +732,19 @@ public class MessageUtil {
 		ServerVersionInfo serverVersion = new ServerVersionInfo();
 		Holder<ServerVersionInfo> serverVersionHolder = new Holder<ServerVersionInfo>(serverVersion);
 	
+		User user = ExchangeConversion.getConv().getUser();
 		ExchangeServicePortType proxy = null;
 		List<MessageType> messages = new ArrayList<MessageType>();
 		List<JAXBElement <? extends ResponseMessageType>> responses = null;
 		try{
-			user.getConversion().getReport().start(Report.EXCHANGE_CONNECT);
+			Report.getReport().start(Report.EXCHANGE_CONNECT);
 			proxy = ExchangeServerPortFactory.getInstance().getExchangeServerPort();
-			user.getConversion().getReport().stop(Report.EXCHANGE_CONNECT);
-			user.getConversion().getReport().start(Report.EXCHANGE_META);
+			Report.getReport().stop(Report.EXCHANGE_CONNECT);
+			Report.getReport().start(Report.EXCHANGE_META);
 			proxy.findItem(finder, user.getImpersonation() ,responseHolder, serverVersionHolder);
 			responses = responseHolder.value.getResponseMessages()
 	                   .getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage();
-			user.getConversion().getReport().stop(Report.EXCHANGE_META);
+			Report.getReport().stop(Report.EXCHANGE_META);
 			
 			for(JAXBElement <? extends ResponseMessageType> jaxResponse : responses){
 				ResponseMessageType response = jaxResponse.getValue();
@@ -767,10 +770,10 @@ public class MessageUtil {
 		} catch (Exception e){
 			throw new RuntimeException("Exception performing getMessages", e);
 		} finally {
-			if(user.getConversion().getReport().isStarted(Report.EXCHANGE_META))
-				user.getConversion().getReport().stop(Report.EXCHANGE_META);
-			if(user.getConversion().getReport().isStarted(Report.EXCHANGE_CONNECT))
-				user.getConversion().getReport().stop(Report.EXCHANGE_CONNECT);
+			if(Report.getReport().isStarted(Report.EXCHANGE_META))
+				Report.getReport().stop(Report.EXCHANGE_META);
+			if(Report.getReport().isStarted(Report.EXCHANGE_CONNECT))
+				Report.getReport().stop(Report.EXCHANGE_CONNECT);
 		} 
 		return messages;
 	}
@@ -785,7 +788,7 @@ public class MessageUtil {
 	 * @throws MessagingException
 	 * @throws IOException
 	 */
-	public static List<MessageType> updateMessagesImapUid(User user, List<MessageType> destMessages, List<Message> sourceMessages) throws MessagingException, IOException{
+	public static List<MessageType> updateMessagesImapUid(List<MessageType> destMessages, List<Message> sourceMessages) throws MessagingException, IOException{
 
 		if(destMessages == null || sourceMessages == null
 		|| destMessages.isEmpty() || sourceMessages.isEmpty()){
@@ -831,7 +834,7 @@ public class MessageUtil {
 		updater.setConflictResolution(ConflictResolutionType.ALWAYS_OVERWRITE);
 		updater.setMessageDisposition(MessageDispositionType.SAVE_ONLY);
 
-		return updateMessagesMetadata(user, updater);
+		return updateMessagesMetadata(updater);
 	}
 
 	/**
@@ -844,7 +847,7 @@ public class MessageUtil {
 	 * @throws MessagingException
 	 * @throws IOException
 	 */
-	public static List<MessageType> updateMessagesIsRead(User user, List<MessageType> destMessages, List<Message> sourceMessages) throws MessagingException, IOException{
+	public static List<MessageType> updateMessagesIsRead(List<MessageType> destMessages, List<Message> sourceMessages) throws MessagingException, IOException{
 		if(destMessages == null || sourceMessages == null
 		|| destMessages.isEmpty() || sourceMessages.isEmpty()){
 			throw new IllegalArgumentException("Both messages parameters can not be null nor empty");
@@ -886,7 +889,7 @@ public class MessageUtil {
 		updater.setMessageDisposition(MessageDispositionType.SAVE_ONLY);
 
 		// This adds the new Id to the old updated messageType
-		List<MessageType> messagesWithNewIds = updateMessagesMetadata(user, updater);
+		List<MessageType> messagesWithNewIds = updateMessagesMetadata(updater);
 		for(i=0; i<messagesWithNewIds.size(); i++){
 			destMessages.get(i).setItemId(messagesWithNewIds.get(i).getItemId());			
 		}
@@ -902,7 +905,7 @@ public class MessageUtil {
 	 * @throws MessagingException
 	 * @throws IOException
 	 */
-	public static List<MessageType> updatePrMsgStatus(User user, List<MessageType> destMessages, List<Message> sourceMessages) throws MessagingException, IOException{
+	public static List<MessageType> updatePrMsgStatus(List<MessageType> destMessages, List<Message> sourceMessages) throws MessagingException, IOException{
 		if(destMessages == null || sourceMessages == null
 		|| destMessages.isEmpty() || sourceMessages.isEmpty()){
 			throw new IllegalArgumentException("Both messages parameters can not be null nor empty");
@@ -938,7 +941,7 @@ public class MessageUtil {
 			}
 			PrMsgStatus prMsgStatusFlags = new PrMsgStatus();
 			prMsgStatusFlags.setFlags(flagValue);
-			logger.debug("OLD: " + getMessageUID(user, message) + ": " + prMsgStatusFlags.toString());
+			logger.debug("OLD: " + getMessageUID(message) + ": " + prMsgStatusFlags.toString());
 			
 			if(message.getFlags().contains(Flags.Flag.DELETED))
 				prMsgStatusFlags.add(PrMsgStatus.MSGSTATUS_DELMARKED);
@@ -960,7 +963,7 @@ public class MessageUtil {
 			else 
 				prMsgStatusFlags.remove(PrMsgStatus.MSGSTATUS_DRAFT);
 
-			logger.debug("NEW: " + getMessageUID(user, message) + ": " + prMsgStatusFlags.toString());
+			logger.debug("NEW: " + getMessageUID(message) + ": " + prMsgStatusFlags.toString());
 				
 
 			prMsgStatusFlagsProp.setExtendedFieldURI(PrMsgStatus.PR_MSG_STATUS_URI);
@@ -986,7 +989,7 @@ public class MessageUtil {
 		updater.setMessageDisposition(MessageDispositionType.SAVE_ONLY);
 
 		// This adds the new Id with new ChangeId to the old updated messageType
-		List<MessageType> messagesWithNewIds = updateMessagesMetadata(user, updater);
+		List<MessageType> messagesWithNewIds = updateMessagesMetadata(updater);
 		for(i=0; i<messagesWithNewIds.size(); i++){
 			destMessages.get(i).setItemId(messagesWithNewIds.get(i).getItemId());			
 		}
@@ -1002,7 +1005,7 @@ public class MessageUtil {
 	 * @throws MessagingException
 	 * @throws IOException
 	 */
-	public static List<MessageType> updateMessagesIsImportant(User user, List<MessageType> destMessages, List<Message> sourceMessages) throws MessagingException, IOException{
+	public static List<MessageType> updateMessagesIsImportant(List<MessageType> destMessages, List<Message> sourceMessages) throws MessagingException, IOException{
 		if(destMessages == null || sourceMessages == null
 		|| destMessages.isEmpty() || sourceMessages.isEmpty()){
 			throw new IllegalArgumentException("Both messages parameters can not be null nor empty");
@@ -1050,7 +1053,7 @@ public class MessageUtil {
 		updater.setMessageDisposition(MessageDispositionType.SAVE_ONLY);
 
 		// This adds the new Id to the old updated messageType
-		List<MessageType> messagesWithNewIds = updateMessagesMetadata(user, updater);
+		List<MessageType> messagesWithNewIds = updateMessagesMetadata(updater);
 		for(i=0; i<messagesWithNewIds.size(); i++){
 			destMessages.get(i).setItemId(messagesWithNewIds.get(i).getItemId());			
 		}
@@ -1093,7 +1096,7 @@ public class MessageUtil {
 	 *            will see it without \Recent set.
 	 * 			 
 	 */
-	protected static List<MessageType> updateMessagesMetadata(User user, UpdateItemType updater) throws MessagingException, IOException{
+	protected static List<MessageType> updateMessagesMetadata(UpdateItemType updater) throws MessagingException, IOException{
 
 		// define response Objects and their holders
 		UpdateItemResponseType updateItemResponse = new UpdateItemResponseType();
@@ -1102,18 +1105,19 @@ public class MessageUtil {
 		ServerVersionInfo serverVersion = new ServerVersionInfo();
 		Holder<ServerVersionInfo> serverVersionHolder = new Holder<ServerVersionInfo>(serverVersion);
 	
+		User user = ExchangeConversion.getConv().getUser();
 		ExchangeServicePortType proxy = null;
 		List<MessageType> messages = new ArrayList<MessageType>();
 		List<JAXBElement <? extends ResponseMessageType>> responses = null;
 		try{
-			user.getConversion().getReport().start(Report.EXCHANGE_CONNECT);
+			Report.getReport().start(Report.EXCHANGE_CONNECT);
 			proxy = ExchangeServerPortFactory.getInstance().getExchangeServerPort();
-			user.getConversion().getReport().stop(Report.EXCHANGE_CONNECT);
-			user.getConversion().getReport().start(Report.EXCHANGE_META);
+			Report.getReport().stop(Report.EXCHANGE_CONNECT);
+			Report.getReport().start(Report.EXCHANGE_META);
 			proxy.updateItem(updater, user.getImpersonation() ,responseHolder, serverVersionHolder);
 			responses = responseHolder.value.getResponseMessages()
 	                   .getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage();
-			user.getConversion().getReport().stop(Report.EXCHANGE_META);
+			Report.getReport().stop(Report.EXCHANGE_META);
 
 			for(JAXBElement <? extends ResponseMessageType> jaxResponse : responses){
 				ResponseMessageType response = jaxResponse.getValue();
@@ -1134,10 +1138,10 @@ public class MessageUtil {
 		} catch (Exception e){
 			throw new RuntimeException("Exception performing UpdateMessageTypesMetadata", e);
 		} finally {
-			if(user.getConversion().getReport().isStarted(Report.EXCHANGE_META))
-				user.getConversion().getReport().stop(Report.EXCHANGE_META);
-			if(user.getConversion().getReport().isStarted(Report.EXCHANGE_CONNECT))
-				user.getConversion().getReport().stop(Report.EXCHANGE_CONNECT);
+			if(Report.getReport().isStarted(Report.EXCHANGE_META))
+				Report.getReport().stop(Report.EXCHANGE_META);
+			if(Report.getReport().isStarted(Report.EXCHANGE_CONNECT))
+				Report.getReport().stop(Report.EXCHANGE_CONNECT);
 		} 
 		return messages;
 		
@@ -1153,7 +1157,7 @@ public class MessageUtil {
 	 * @throws IOException
 	 */
 	public static List<MessageType> moveMessages(User user, List<MessageType> messages, BaseFolderType folder) throws MessagingException, IOException{
-		return moveMessages(user, messages, folder.getFolderId());
+		return moveMessages(messages, folder.getFolderId());
 	}
 	
 	/**
@@ -1165,7 +1169,7 @@ public class MessageUtil {
 	 * @throws MessagingException
 	 * @throws IOException
 	 */
-	public static List<MessageType> moveMessages(User user, List<MessageType> messages, BaseFolderIdType folderId) throws MessagingException, IOException{
+	public static List<MessageType> moveMessages(List<MessageType> messages, BaseFolderIdType folderId) throws MessagingException, IOException{
 
 		MoveItemType mover = new MoveItemType();
 		
@@ -1191,18 +1195,19 @@ public class MessageUtil {
 		ServerVersionInfo serverVersion = new ServerVersionInfo();
 		Holder<ServerVersionInfo> serverVersionHolder = new Holder<ServerVersionInfo>(serverVersion);
 	
+		User user = ExchangeConversion.getConv().getUser();
 		ExchangeServicePortType proxy = null;
 		List<MessageType> retMessages = new ArrayList<MessageType>();
 		List<JAXBElement <? extends ResponseMessageType>> responses = null;
 		try{
-			user.getConversion().getReport().start(Report.EXCHANGE_CONNECT);
+			Report.getReport().start(Report.EXCHANGE_CONNECT);
 			proxy = ExchangeServerPortFactory.getInstance().getExchangeServerPort();
-			user.getConversion().getReport().stop(Report.EXCHANGE_CONNECT);
-			user.getConversion().getReport().start(Report.EXCHANGE_META);
+			Report.getReport().stop(Report.EXCHANGE_CONNECT);
+			Report.getReport().start(Report.EXCHANGE_META);
 			proxy.moveItem(mover, user.getImpersonation() ,responseHolder, serverVersionHolder);
 			responses = responseHolder.value.getResponseMessages()
 	                   .getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage();
-			user.getConversion().getReport().stop(Report.EXCHANGE_META);
+			Report.getReport().stop(Report.EXCHANGE_META);
 
 			for(JAXBElement <? extends ResponseMessageType> jaxResponse : responses){
 				ResponseMessageType response = jaxResponse.getValue();
@@ -1223,10 +1228,10 @@ public class MessageUtil {
 		} catch (Exception e){
 			throw new RuntimeException("Exception performing UpdateMessageTypesMetadata", e);
 		} finally {
-			if(user.getConversion().getReport().isStarted(Report.EXCHANGE_META))
-				user.getConversion().getReport().stop(Report.EXCHANGE_META);
-			if(user.getConversion().getReport().isStarted(Report.EXCHANGE_CONNECT))
-				user.getConversion().getReport().stop(Report.EXCHANGE_CONNECT);
+			if(Report.getReport().isStarted(Report.EXCHANGE_META))
+				Report.getReport().stop(Report.EXCHANGE_META);
+			if(Report.getReport().isStarted(Report.EXCHANGE_CONNECT))
+				Report.getReport().stop(Report.EXCHANGE_CONNECT);
 		} 
 		
 		return retMessages;
