@@ -1,0 +1,194 @@
+           <!-- wiki content -->
+            <h2><a name="imap2exchangedocumentation-Introduction"></a>Introduction</h2>
+
+<p>This is an attempt to explain how the imap2exchange conversion works so that users can see how to extend Yale's implementation to fit their own needs.</p>
+<div class='panelMacro'><table class='infoMacro'><colgroup><col width='24'><col></colgroup><tr><td valign='top'><img src="/confluence/images/icons/emoticons/information.gif" width="16" height="16" align="absmiddle" alt="" border="0"></td><td><b>Useful Information</b><br />
+<p>This conversion utility can be run again and again against the same data, and it will only apply changes.  Every message is given a uid to determine what po it came from, as well as the folder path and IMAP uid of the message.  This allow you to run the conversion utility on a working exchange mailbox without modifying or deleting messages not contained in the source Mailbox.  You could even merge multiple source mailboxes into one exchange account...</p></td></tr></table></div>
+<div class='panelMacro'><table class='warningMacro'><colgroup><col width='24'><col></colgroup><tr><td valign='top'><img src="/confluence/images/icons/emoticons/forbidden.gif" width="16" height="16" align="absmiddle" alt="" border="0"></td><td><b>Warning - Use of Spring</b><br />
+<p>I rely on the use of <a href="http://www.springframework.org" rel="nofollow">Sping</a> but I use it very lightly, only to initialize my environment, and allow others to more easily substitute there implementations for mine.  So if you have been living under a rock and have never heard of Spring, please go check it out <a href="http://www.springframework.org" rel="nofollow">here</a>.  </p></td></tr></table></div>
+
+<h2><a name="imap2exchangedocumentation-KeyPlayers"></a>Key Players</h2>
+
+<table class='confluenceTable'><tbody>
+<tr>
+<th class='confluenceTh'> Class </th>
+<th class='confluenceTh'> Description </th>
+</tr>
+<tr>
+<td class='confluenceTd'> ExchangeConversionManager </td>
+
+<td class='confluenceTd'> The ExchangeConversionManager is the controller of all conversions.  This class contains a <a href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/util/concurrent/ThreadPoolExecutor.html" rel="nofollow">ThreadPoolExceutor</a> that uses an <a href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/util/concurrent/ArrayBlockingQueue.html" rel="nofollow">ArrayBlockingQueue</a> to queue conversions.  Since the conversion is of email(Text), there is the very real possibility of blowing out the JVM.  For this purpose we are using this method to maximize the number of concurrent conversions, while minimizing the risk of an <a href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/lang/OutOfMemoryError.html" rel="nofollow">OutOfMemoryError</a>. </td>
+</tr>
+<tr>
+<td class='confluenceTd'> ExchangeConversion </td>
+<td class='confluenceTd'> The ExchangeConversion is a Runnable object that contains all the information need to convert a single users mail from a source IMAP store to a destination Exchange Store. </td>
+
+</tr>
+<tr>
+<td class='confluenceTd'> User </td>
+<td class='confluenceTd'> The object that contains information for the ExchangeConversion to use.  There is a one to one relationship between a User and a ExchangeConversion. </td>
+</tr>
+<tr>
+<td class='confluenceTd'> FolderSynchronizer </td>
+<td class='confluenceTd'> The FolderSynchronizer uses a MessageSynchronizer to synchronize messages at the current folder level, and also synchronizes sub-folders. </td>
+</tr>
+
+<tr>
+<td class='confluenceTd'> MessageSynchronizer </td>
+<td class='confluenceTd'> Synchronizes messages on the destination mail store from the source mail store.  It will create messages that don't exist on the destination, update changes to message read status, and remove messages from the destination if they have been removed from the source. </td>
+</tr>
+<tr>
+<td class='confluenceTd'> UserFacotry </td>
+<td class='confluenceTd'> Makes Users </td>
+</tr>
+<tr>
+
+<td class='confluenceTd'> ImapServerFactory </td>
+<td class='confluenceTd'> Makes ImapServers </td>
+</tr>
+<tr>
+<td class='confluenceTd'> ExchangeConversionFactory </td>
+<td class='confluenceTd'> Makes ExchangeConversion Runnables </td>
+</tr>
+</tbody></table>
+
+<h2><a name="imap2exchangedocumentation-Howitworks"></a>How it works</h2>
+
+
+<h3><a name="imap2exchangedocumentation-I.CreateaUser."></a>I. Create a User.</h3>
+
+<p>Users are created from a UserFactory(YaleUserFactory) and their interface has the following properties:</p>
+<table class='confluenceTable'><tbody>
+<tr>
+<th class='confluenceTh'> Property </th>
+<th class='confluenceTh'> Description </th>
+
+</tr>
+<tr>
+<td class='confluenceTd'> uid </td>
+<td class='confluenceTd'> set by our implemented UserFactory </td>
+</tr>
+<tr>
+<td class='confluenceTd'> SourceImapPo </td>
+<td class='confluenceTd'> set by our implemented UserFactory </td>
+</tr>
+
+<tr>
+<td class='confluenceTd'> UPN </td>
+<td class='confluenceTd'> In our implementation this is set during the UserSetupAction prior to the preConversionAction </td>
+</tr>
+<tr>
+<td class='confluenceTd'> primarySMTPAddress </td>
+<td class='confluenceTd'> In our implementation this is set during the UserSetupAction prior to the preConversionAction </td>
+</tr>
+<tr>
+
+<td class='confluenceTd'> Conversion </td>
+<td class='confluenceTd'> set in ExchangeConversionFactory </td>
+</tr>
+</tbody></table>
+
+<h3><a name="imap2exchangedocumentation-II.CreateanExchangeConversion"></a>II. Create an ExchangeConversion</h3>
+
+<p>ExchangeConversions are created from an ExchangeConversionFactory.  The ExchangeConversionFactory requires a user to create an ExchangeConversion.  The properties of the ExchangeConversion that are set by the ExchangeConversionFactory are the following:</p>
+<table class='confluenceTable'><tbody>
+<tr>
+<th class='confluenceTh'> Property </th>
+
+<th class='confluenceTh'> Description </th>
+</tr>
+<tr>
+<td class='confluenceTd'> int maxMessageSize </td>
+<td class='confluenceTd'> Maximum Message Size allowed during the conversion.  This will impact your maxRequest size in IIS for Soap calls. </td>
+</tr>
+<tr>
+<td class='confluenceTd'> int maxMessageGrpSize </td>
+<td class='confluenceTd'> This is the size of mail that you want to group together for one Soap call.  This size if the raw mail size.  The Soap message will be large than this number.  Each Message is Base64Excoded which increases the size of the message by approx. 5/4, and there is soap xml markup that wraps each message increasing the size of the soap call in the group. </td>
+
+</tr>
+<tr>
+<td class='confluenceTd'> boolean isCleaner </td>
+<td class='confluenceTd'> This is a development utility to erase ALL messages in a ExchangeAccount.  This does not care the origin of the message. </td>
+</tr>
+<tr>
+<td class='confluenceTd'> FolderAltNames altNames </td>
+<td class='confluenceTd'> These are folders alternate names that you want to merge with Exchange System Folders. i.e. "trash" and "Trash" into "Deleted Items" </td>
+</tr>
+
+<tr>
+<td class='confluenceTd'> Map&lt;String, PluggableConversionAction&gt; </td>
+<td class='confluenceTd'> The three PluggableConversionActions: UserSetupAction, PreConversionAction, PostConversionAction </td>
+</tr>
+</tbody></table>
+
+<h3><a name="imap2exchangedocumentation-III.RunExchangeConversion"></a>III. Run ExchangeConversion</h3>
+
+
+<h4><a name="imap2exchangedocumentation-%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3BA.UserSetupAction"></a>&nbsp;&nbsp;&nbsp;&nbsp;A. UserSetupAction</h4>
+
+<p>Once a conversion moves from the Queue to the Executor, the first step is to run the UserSetupAction.  I added this here as opposed to the UserFactory to minimize the work needed during the submission of a conversion to the ConversionManager.  In Yale's implementation this is where we lookup a users UPN, primarySMTPAddress, and set their ExchangeImperationationType.  Ours us unique to our AD implementation.  If you have all your users in one location, then you can use the edu.yale.its.tp.email.conversion.util.GenericUserSetupAction that will look for a netid(cn) in one location to set the same information on the User Object.  Please see Examples.</p>
+
+<h4><a name="imap2exchangedocumentation-%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3BB.PreConversionAction"></a>&nbsp;&nbsp;&nbsp;&nbsp;B. PreConversionAction</h4>
+
+<p>The PreConversionAction is a point cut for customizable code to execute prior to the actual conversion.  Since we are implementing quotas in exchange and have not been on our imap servers, I take advantage of this to check the size of the source mailbox.  I have written very Yale specific ImapMailboxSizers to return the size of a users imap store.  If it's large then the limit I don't continue with the conversion.  You can use this interface to do what ever you like prior to the conversion.</p>
+
+<h4><a name="imap2exchangedocumentation-%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3BC.Move%2FUpdateMailinExchange"></a>&nbsp;&nbsp;&nbsp;&nbsp;C. Move/Update Mail in Exchange</h4>
+
+
+<h4><a name="imap2exchangedocumentation-%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3Bi.IndexFolders"></a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i. Index Folders</h4>
+
+<p>The first step in moving the mail is to determine what mail needs to move, be update, or be deleted.  For this we must index the imap store and the exchange server.</p>
+<div class='panelMacro'><table class='warningMacro'><colgroup><col width='24'><col></colgroup><tr><td valign='top'><img src="/confluence/images/icons/emoticons/forbidden.gif" width="16" height="16" align="absmiddle" alt="" border="0"></td><td><b>Warning - Merged Folders</b><br />
+<p>Folders on the same level with the same name in mixed case will be merged (Thank Exchange&#33;).  If you have set AltFolders, these folders will be merged also.</p></td></tr></table></div>
+
+<h4><a name="imap2exchangedocumentation-%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3Bii.SeperateDeletedfromnonDeletedMessages"></a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ii. Seperate Deleted from non-Deleted Messages</h4>
+
+<p>Since Exchange Web Services does not expose the entire MAPI api, there is no way to set the deleted flag on the message <a href="/confluence/display/EXCH/imap2exchange+background+information" title="imap2exchange background information">(See here.)</a>. Because of this, I seperate the deleted items from the non-deleted items, and create/modify tagged deleted items in the "Deleted Items" folder in exchange.  Since every message is tagged with a conversion id I am able to determine the source of the messages in exchange and operate on the subset to messages in the "Deleted Items" folder that came from the folder</p>
+
+<h4><a name="imap2exchangedocumentation-%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3Biii.GroupeachsetintomaxMessageGrpSize"></a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;iii. Group each set into maxMessageGrpSize</h4>
+
+<p>Once we have determined what messages need to be created, we group them for efficiency.  Our max message size is 20 MB, and our maxMessageGroupSize is 5 MB.  Why the difference you ask?  Well for a single message we have to Base64Encode the MimeContent of the message and wrap it in a Soap call.  The markup for one messages is small, but if you have to wrap 1000 messages each 5 KB in size, then the markup becomes more destructive.  Plus the Base64Encoding increases the message size by approx 5/4ths.  Any how, this is why the maxMessageGrpSize is smaller that the maxMessageSize.  Any message greater that the maxMessageGrpSize is sent by itself.</p>
+
+
+<h4><a name="imap2exchangedocumentation-%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3Bvi.CreateNewMessages"></a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vi. Create New Messages</h4>
+<p>Once we determine the group to move, we use javamail to get the MimeContent and write it directly to the Base64Encoder to minimize the char[]'s created by java.  Here is the snippet of code that performs this operation for each messages in a group.  You will notice that I create the WS object MessageType in another method.  This method creates the UID extendedProperty for the message of type "$sourcePo:$sourceFolderPath:$messageUid".  This allows me to determine if this message was from this same folder, and allows me to ignore other messages in the folder that were not converted from this source mailbox.</p>
+<div class="code panel" style="border-width: 1px;"><div class="codeContent panelContent">
+<pre class="code-java"><span class="code-keyword">for</span>(Message sourceMessage : sourceMessages){
+  <span class="code-keyword">try</span>{
+    <span class="code-comment">// Create the Destination Message and set Props before I set the mime-content...
+</span>    MessageType destMessage = createMessageType(user, sourceMessage);
+
+    <span class="code-comment">// Convert MimeContent to Base64 and add it to the message.
+
+</span>    baos = <span class="code-keyword">new</span> ByteArrayOutputStream();
+    b64es = <span class="code-keyword">new</span>  BASE64EncoderStream(baos);
+    sourceMessage.writeTo(b64es);
+    b64es.flush();
+				
+    MimeContentType mime = <span class="code-keyword">new</span> MimeContentType();
+    mime.setValue(baos.toString());
+
+    destMessage.setMimeContent(mime);
+    destMessages.add(destMessage);
+
+    conv.addMessagesSize(sourceMessage.getSize());
+    conv.addMessagesCnt(1);
+			
+  } <span class="code-keyword">catch</span> (Exception e){
+    <span class="code-keyword">throw</span> <span class="code-keyword">new</span> RuntimeException(<span class="code-quote">"Error getting message source MIME content."</span>, e);
+  }
+}</pre>
+
+</div></div>
+
+<h4><a name="imap2exchangedocumentation-%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3Bv.UpdateChangedMessages"></a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v. Update Changed Messages</h4>
+<p>Next we need to compare the metadata of messages that we have already moved.  If a difference is detected a modification is made to the destination message.</p>
+
+<h4><a name="imap2exchangedocumentation-%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3Bvi.RemoveDeletedMessages"></a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vi. Remove Deleted Messages</h4>
+<p>If messages are removed from the source folder, then they will be removed from the destination folder  If a message was marked deleted and before the next run the folder was purged, and the original destination folder would have been "Deleted Items", and it will be removed.</p>
+
+
+<h4><a name="imap2exchangedocumentation-%26nbsp%3B%26nbsp%3B%26nbsp%3B%26nbsp%3BD.PostConversionAction"></a>&nbsp;&nbsp;&nbsp;&nbsp;D. PostConversionAction</h4>
+<p>This is another point cut for users that want to perform some action post conversion.  If you want to perform some sort of mailbox verification, or normalization, it can be executed here.</p>
+
+        </div>
