@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?><launchConfiguration type="org.eclipse.jdt.launching.localJavaApplication">
+<stringAttribute key="bad_container_name" value="/imap2exchange/src/main/launchers/"/>
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+<listEntry value="/imap2exchange/src/main/java/edu/yale/its/tp/email/conversion/yale/YaleExchangeConversionCmdLineUtil.java"/>
+</listAttribute>
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+<listEntry value="1"/>
+</listAttribute>
+<mapAttribute key="org.eclipse.debug.core.environmentVariables">
+<mapEntry key="EXCHANGE_CONVERSION_HOME" value="${project_loc}"/>
+</mapAttribute>
+<stringAttribute key="org.eclipse.jdt.launching.CLASSPATH_PROVIDER" value="org.maven.ide.eclipse.launchconfig.classpathProvider"/>
+<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="edu.yale.its.tp.email.conversion.yale.YaleExchangeConversionCmdLineUtil"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-batch"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="imap2exchange"/>
+<stringAttribute key="org.eclipse.jdt.launching.SOURCE_PATH_PROVIDER" value="org.maven.ide.eclipse.launchconfig.sourcepathProvider"/>
+<stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Xms2g&#10;-Xmx2g&#10;-Xmn1g&#10;-Xss128k&#10;-XX:ParallelGCThreads=20&#10;-XX:+UseConcMarkSweepGC&#10;-XX:+UseParNewGC&#10;-XX:SurvivorRatio=8&#10;-XX:TargetSurvivorRatio=90&#10;-XX:MaxTenuringThreshold=31&#10;-DEXCHANGE_CONVERSION_HOME=${project_loc}&#10;-Dlog4j.configuration=file:${project_loc}/config/log4j.properties"/>
+</launchConfiguration>
