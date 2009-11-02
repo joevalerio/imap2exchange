@@ -64,10 +64,11 @@ public class YaleImapServerFactory  extends ImapServerFactory{
 	public Store getImapStore(User user){
 
 		final ImapServer server = super.getImapServer(user.getSourceImapPo());
-		if(server == null
-		|| server.getPort() == null
-		|| server.getProtocol() == null
-		|| server.getAdminPwd() == null){
+		if(server == null){
+			throw new RuntimeException("User[" + user.getUid() + "]'s sourcePo[" + user.getSourceImapPo() + "] is not defined in config.properties correctly.");
+		} else if (server.getPort() == null
+				|| server.getProtocol() == null
+				|| server.getAdminPwd() == null){
 			logger.debug("port: " + server.getPort());
 			logger.debug("protocol: " + server.getProtocol());
 			logger.debug("pwd: " + server.getAdminPwd());
