@@ -65,13 +65,10 @@ public class YaleImapServerFactory  extends ImapServerFactory{
 
 		final ImapServer server = super.getImapServer(user.getSourceImapPo());
 		if(server == null){
-			throw new RuntimeException("User[" + user.getUid() + "]'s sourcePo[" + user.getSourceImapPo() + "] is not defined in config.properties correctly.");
+			throw new RuntimeException("User[" + user.getUid() + "]'s sourcePo[" + user.getSourceImapPo() + "] is not defined in config.properties.");
 		} else if (server.getPort() == null
 				|| server.getProtocol() == null
 				|| server.getAdminPwd() == null){
-			logger.debug("port: " + server.getPort());
-			logger.debug("protocol: " + server.getProtocol());
-			logger.debug("pwd: " + server.getAdminPwd());
 			throw new RuntimeException("User[" + user.getUid() + "]'s sourcePo[" + user.getSourceImapPo() + "] is not defined in config.properties correctly.");
 		}
 
