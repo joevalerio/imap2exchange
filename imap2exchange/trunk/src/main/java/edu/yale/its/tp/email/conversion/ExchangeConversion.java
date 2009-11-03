@@ -351,17 +351,35 @@ import com.sun.mail.imap.IMAPFolder;
 		Map<String, MergedImapFolder> mergedFolders = new TreeMap<String, MergedImapFolder>();
 		for(String folderName : imapFolders.keySet()){
 			Folder folder = imapFolders.get(folderName);
+			String fullName = getSanatizedFullFoldername(folder.getFullName());
 			// Special Case for Alt Folder Names
 			if(getAltNames() != null){
-				FolderAltName altName = getAltNames().getFolderAltName(folder.getFullName()); 
+				FolderAltName altName = getAltNames().getFolderAltName(fullName); 
 				if(altName != null){
 					mergeFolder(mergedFolders, altName.getExchangeFolderName(), folder);
 					continue;
 				}
 			}
-			mergeFolder(mergedFolders, folder.getFullName(), folder);
+			mergeFolder(mergedFolders, fullName, folder);
 		}
 		return mergedFolders;
+	}
+	
+	/**
+	 * Remove whitespace from folder names and parent folder names...
+	 * @param fullname
+	 * @return
+	 * @throws MessagingException
+	 */
+	protected String getSanatizedFullFoldername(String fullname) throws MessagingException{
+		String result = fullname.trim();
+		int last = -1;
+		while(last != result.length()){
+			last = result.length();
+			result = result.replace(imapRootFolder.getSeparator() + " ", String.valueOf(imapRootFolder.getSeparator()));
+			result = result.replace(" " + imapRootFolder.getSeparator() , String.valueOf(imapRootFolder.getSeparator()));
+		}
+		return result;
 	}
 
 	/**
