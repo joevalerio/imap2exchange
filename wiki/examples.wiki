@@ -1,4 +1,4 @@
-[Documentation] | [examples]
+[http://code.google.com/p/imap2exchange/ Home] | [examples]
 
 Each of the examples below builds on the one before it.  This will give you a start point to configure the application for your use.
 
