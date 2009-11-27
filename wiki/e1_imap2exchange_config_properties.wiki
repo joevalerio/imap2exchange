@@ -1,3 +1,7 @@
+[http://code.google.com/p/imap2exchange/ Home] | [examples] | [Example1] | [e1_imap2exchange_config_properties imap2exchange-config.properties]
+
+==imap2exchange-config.properties==
+
 In the property file here, you can see how we define the values for the properties of the beans we created in the xml files.  You can also see that I override the default setting of the exchangeConversionManager's  properties from the xml file.  
 
 {{{
