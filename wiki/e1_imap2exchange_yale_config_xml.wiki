@@ -1,4 +1,4 @@
-[http://code.google.com/p/imap2exchange/ Home] | [examples] | [Example1]
+[http://code.google.com/p/imap2exchange/ Home] | [examples] | [Example1] | [e1_imap2exchange_yale_config_xml  imap2exchange-yale-config.xml]
 
 ==imap2exchange-yale-config.xml==
 
