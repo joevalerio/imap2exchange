@@ -1,6 +1,6 @@
 [http://code.google.com/p/imap2exchange/ Home] | [examples] | [Example1] | [e1_imap2exchange_config_xml imap2exchange-config.xml]
 
-==imap2exchange-config.xml==
+=imap2exchange-config.xml=
 
 || *Bean* || *Explanation* ||
 || propertyOverrideConfigurer || This reads imap2exchange-config.properties and overrides values defined in this and the other xml files with the the values in the property file. I extended the default PropertyOverrideConfigurer from spring because I didn't like how it handled aliases.||
