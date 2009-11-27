@@ -1,4 +1,4 @@
-[http://code.google.com/p/imap2exchange/ Home] | [Logging] 
+[http://code.google.com/p/imap2exchange/ Home] | [Logging Logging and Auditability] 
 
 == Logging and Auditability ==
 
