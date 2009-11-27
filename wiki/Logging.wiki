@@ -1,6 +1,6 @@
 [http://code.google.com/p/imap2exchange/ Home] | [Logging Logging and Auditability] 
 
-== Logging and Auditability ==
+=Logging and Auditability=
 
 Any time you perform a conversion of something as important as email you must have an auditable system.  I have spent some time trying to manage the vast output from this system and present it so that it is easy to determine what happened at a granular level, but also to stand at 10,000 ft and find the 2 people in 300 that failed.  Because of the complexity of the log4j setting in this application, I felt is was at least responsible for me to explain what I did, and present you with how I will use this application.
 
