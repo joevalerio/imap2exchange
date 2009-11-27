@@ -1,6 +1,6 @@
 [http://code.google.com/p/imap2exchange/ Home] | [examples] | [Example1] | [e1_imapservers_xml imapservers.xml]
 
-==imapservers.xml==
+=imapservers.xml=
 
 This file is where we define the source IMAP servers.  The names of the beans are not important here, they will just be used to reference the bean in the properties file. 
 
