@@ -1,0 +1,119 @@
+== Project Goal==
+
+The goal of the IMAP-to-Exchange project was to convert mail from an IMAP4 Server to Exchange 2007. Success was defined as accessing mail from Exchange via IMAP4 or POP with NO noticeable difference post conversion. This goal was not met, but in the following article I will explain the limitations in Exchange Web Services (EWS) that stopped me from obtaining my goal, and the compromises I made to account for them. A secondary goal was to write the conversion so that it could be performed over and over again on the mailboxes and only move new items and update/delete already converted items. An rsync, if you will, for mail. This secondary goal was accomplished.
+
+==Project Scope==
+
+The scope of this project is to move mail. This project does not claim to be in any way shape or form the provisioning of Exchange Accounts, locker of IMAP4 servers, or anything other that coping mail from an IMAP4 source to a Microsoft Exchange 2007 Server via EWS.
+
+==IMAP4 Folder and Message Properties==
+
+
+===Folders (Mailboxes)===
+
+  * *Name (String)* - The name of the folder
+  * *Subscribed (boolean) -* was the folder subscribed to by the IMAP4 user
+  * *Parent Folder (Folder)* -  this property is just here to remind me that we are in a hierarchical message tree.
+
+===Messages===
+
+  * *Headers - Name-Value Pairs (String,String) -* As defined in [http://www.ietf.org/rfc/rfc2076.txt IEFT RFC 2076]
+  * *Body - (String) -* Message Bodies can be very complicated due to Mime Content. I will just mention here a message's MIME Content is not decomposed during the Conversion process until Exchange has its way with it.
+  * *UID* *(Integer)* - Every message has a unique identifier unique to the folder that holds it. The uid has no meaning to the end user, it is solely used to keep track of messages in the folder. Pop clients use this to determine what messages it has already downloaded, and which need to be download.
+  * *System Flags (IMAP Flag)*
+    ** \Seen - Message has been read
+    ** \Answered - Message has been answered
+    ** \Flagged - Message is "flagged" for urgent/special attention
+    ** \Deleted - Message is "deleted" for removal by later EXPUNGE
+    ** \Draft - Message has not completed composition (marked as draft)
+    ** \Recent - Message is "recently" arrived in the mailbox. This session is the first session to have been notified about the message; subsequent sessions will not see \Recent for this message.
+  * *User Defined Flags (IMAP Flag)* - IMAP4 clients can define custom flags. The implementation of this varies from server to server to server, but there are a fixed number of flags per folder.
+
+==Converting IMAP4 Folder and Message Properties to Exchange via EWS==
+
+===Folders (Mailboxes)===
+  * *Name (String)* - Like all Microsoft Products Exchange thinks "FolderName" equals "FOLDERNAME". This posses an problem if the user happens to have two folders of the same name in mixed case. In this event, the conversion will merge these folders which is arbitrarily name as the first case version of that folder's name that was happened upon.
+  * *Subscribed (boolean) -* This property is held in MAPI Folder property PR_STATUS, which is a bit flag that contains the following bits. This property is not an extended property and can not be accessed from EWS. So folder Subscription information is not converted.
+    ** FLDSTATUS_HIGHLIGHTED 0x00000001
+    ** FLDSTATUS_TAGGED 0x00000002
+    ** FLDSTATUS_HIDDEN 0x00000004
+    ** FLDSTATUS_DELMARKED 0x00000008
+  * *Parent Folder (Folder)* - this property is just here to remind me that we are in a hierarchical message tree. The structure of the tree can be converted without error.
+
+===Messages===
+  * *Headers - Name-Value Pair (String,String) -* As I mentioned earlier, I do not decompose the message during conversion. However, once Exchange receives the message it decomposes it into its parts and when asked re-assembles the parts into the MIME content that was once provided. There is practically no chance that the decomposed MIME Content and re-assembled MIME content will be the same. see: http://forums.microsoft.com/TechNet/ShowPost.aspx?PostID=2069342&SiteID=17
+  * *Body* - (String) - same as headers...
+  * *UID* *(Integer)* - Exchange does have a uid for IMAP messages, but the property that holds it, PR_INTERNET_ARTICLE_NUMBER (0x0E23) is not writable. So we lose the ability to synchronized the uids. To account for this I create a custom extended property on all Exchange Messages of the following format: $imap.source.uri:$folder.full.name:$uid. This allows me to compare the messages from the two sources for update. This also has the added benefit of allowing us to convert against an Exchange Account that my be in use, and not touch the existing messages. Further more you could convert mail from multiple IMAP sources into an Exchange Account and synchronize them multiple times and only affect the set of messages from each IMAP server/folder respectively.
+  * *System Flags (IMAP Flag)* - System Flags are where the conversion really starts to unfold. But not so far that we can't do a worthwhile conversion.
+    ** \Seen - The Seen message flag directly maps to the Message.isRead() property
+    ** \Answered - The Answered flag is held in a bit flag property PR_MSG_STATUS (0xe17), MSGSTATUS_ANSWERED (0x200). PR_MSG_STATUS is read only. Answered will not be converted.
+    ** \Flagged - The Flagged flag is held in a bit flag property PR_MSG_STATUS (0xe17), MSGSTATUS_TAGGED (0x2). PR_MSG_STATUS is read only. Flagged will not be converted.
+    ** \Deleted - The Deleted flag is held in a bit flag property PR_MSG_STATUS (0xe17), MSGSTATUS_DELMARKED (0x8). PR_MSG_STATUS is read only. This flag is the most damaging of the lot. If I just ignore the deleted flag, then all the messages that clients are likely hiding will show up again. I chose to move all flagged Deleted messages to the Delete Items folder in Exchange. If the Message is undeleted, it will be correctly recreated in the folder on subsequent conversions. I also update the messages in Deleted Items, at least their read status, because that is the only property I can set post create. I will mention that I also added the functionality to merge named folders into Exchange System folders for usability. Most IMAP clients create a folder called Trash or trash for deleted Items, if you chose to handle them that way. These folders can be optionally merged into Delete Items. I implemented this generically, so the only restriction is that the target folder must be a System Folder in Exchange.
+    ** \Draft - The Draft flag is held in the bit flag property PR_MESSAGE_FLAGS(0xe07), MESSAGE_FLAG_UNSENT (0x8). This bit is only settable during message creation. This leaves open the small likelihood that on a subsequent conversion run, a message that was draft, and has been sent, and is still in the same folder, would not reflect the true message draft status from the source IMAP server. I can live with this.
+    ** \Recent - I am ignoring the recent flag, as I can't set it, and I trample it once I get the message MIME Content for the conversion.
+  * *User Defined Flags (IMAP Flag)* - Exchange does not support user defined flags. There is little likely hood that outlook (the target client of choice) would interpret them correctly any how. Most IMAP clients have a client side flag store, of course linked to the UID of the message. So If you have a user that wants to use Exchange via IMAP, all user defined flags will be lost, but you might be able to rely on your nifty client to handle subsequent markups locally. In my defense to assert that Exchange does not support User Defined Flags, here is an IMAP protocol trace from UWash and Exchange...
+
+{{{
+UWash
+====================================================
+a1 select Software
+* 11 EXISTS
+* 0 RECENT
+* OK [UIDVALIDITY 1151671763] UID validity status
+* OK [UIDNEXT 26] Predicted next UID
+* FLAGS ($Label1 $Label2 $Label3 $Label4 $Label5 \Answered \Flagged \Deleted \Draft \Seen)
+* OK [PERMANENTFLAGS ($Label1 $Label2 $Label3 $Label4 $Label5 \Answered \Flagged \Deleted \Draft \Seen)] Permanent flags
+a1 OK [READ-WRITE] SELECT completed
+a2 uid fetch 1:* (FLAGS)
+* 1 FETCH (UID 2 FLAGS (\Seen $Label4))
+* 2 FETCH (UID 3 FLAGS (\Seen))
+* 3 FETCH (UID 6 FLAGS (\Seen \Answered $Label1))
+* 4 FETCH (UID 7 FLAGS (\Seen))
+* 5 FETCH (UID 19 FLAGS (\Seen))
+* 6 FETCH (UID 20 FLAGS (\Seen))
+* 7 FETCH (UID 21 FLAGS (\Seen))
+* 8 FETCH (UID 22 FLAGS (\Seen))
+* 9 FETCH (UID 23 FLAGS (\Seen))
+* 10 FETCH (UID 24 FLAGS (\Seen))
+* 11 FETCH (UID 25 FLAGS (\Seen))
+a2 OK UID FETCH completed
+a3 uid store 2 +flags ($Test)
+* FLAGS ($Label1 $Label2 $Label3 $Label4 $Label5 $Test \Answered \Flagged \Deleted \Draft \Seen)
+* OK [PERMANENTFLAGS ($Label1 $Label2 $Label3 $Label4 $Label5 $Test \Answered \Flagged \Deleted \Draft \Seen)] Permanent flags
+* 1 FETCH (FLAGS (\Seen $Label4 $Test) UID 2)
+a3 OK UID STORE completed
+
+Exchange
+====================================================
+a1 SELECT Software
+* 11 EXISTS
+* 0 RECENT
+* FLAGS (\Seen \Answered \Flagged \Deleted \Draft $MDNSent)
+* OK [PERMANENTFLAGS (\Seen \Answered \Flagged \Deleted \Draft $MDNSent)] Permanent flags
+* OK [UNSEEN 1] Is the first unseen message
+* OK [UIDVALIDITY 473] UIDVALIDITY value
+* OK [UIDNEXT 26] The next unique identifier value
+a1 OK [READ-WRITE] SELECT completed.
+a2 uid fetch 1:* (flags)
+* 1 FETCH (FLAGS (\Flagged \Draft) UID 12)
+* 2 FETCH (FLAGS (\Seen \Draft) UID 13)
+* 3 FETCH (FLAGS (\Seen \Draft) UID 14)
+* 4 FETCH (FLAGS (\Seen \Draft) UID 15)
+* 5 FETCH (FLAGS (\Seen \Draft) UID 16)
+* 6 FETCH (FLAGS (\Seen \Draft) UID 17)
+* 7 FETCH (FLAGS (\Seen \Draft) UID 18)
+* 8 FETCH (FLAGS (\Seen \Draft) UID 19)
+* 9 FETCH (FLAGS (\Seen \Draft) UID 20)
+* 10 FETCH (FLAGS (\Seen \Draft) UID 21)
+* 11 FETCH (FLAGS (\Seen \Draft) UID 22)
+a2 OK FETCH completed.
+a3 uid store 12 +flags ($Test)
+a3 BAD Command Argument Error. 11
+a4 uid store 12 +flags ($MDNSent)
+* 1 FETCH (FLAGS (\Flagged \Draft $MDNSent))
+a4 OK STORE completed.
+}}}
+
+==Conclusion==
+
+It is possible to do a server side conversion of email from IMAP to Exchange, as long as the limitations listed above are acceptable to you. I have benchmarked my personal mail box moving from UWash to Exchange, roughly a 250Mb mailbox at approx. 7-8 minutes, depending on network traffic. Please see [imap2exchange documentation] to answer any of your questions pertaining how to make it all work. We have not done our own conversion yet and I am sure something will come up that I haven't taken into account once we start moving users. I hope you at least found this interesting.
