@@ -1,3 +1,7 @@
+[http://code.google.com/p/imap2exchange/ Home] | [Background Background Information] 
+
+=imap2exchange Background Information=
+
 == Project Goal==
 
 The goal of the IMAP-to-Exchange project was to convert mail from an IMAP4 Server to Exchange 2007. Success was defined as accessing mail from Exchange via IMAP4 or POP with NO noticeable difference post conversion. This goal was not met, but in the following article I will explain the limitations in Exchange Web Services (EWS) that stopped me from obtaining my goal, and the compromises I made to account for them. A secondary goal was to write the conversion so that it could be performed over and over again on the mailboxes and only move new items and update/delete already converted items. An rsync, if you will, for mail. This secondary goal was accomplished.
