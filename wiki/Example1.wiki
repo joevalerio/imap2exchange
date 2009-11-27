@@ -1,6 +1,6 @@
 [http://code.google.com/p/imap2exchange/ Home] | [examples] | [Example1]
 
-==vanilla batch conversion example==
+=vanilla batch conversion example=
 
 In this example I have configured the tool to do a plain vanilla batch conversion.  
 
