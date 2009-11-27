@@ -1,3 +1,7 @@
+[http://code.google.com/p/imap2exchange/ Home] | [Documentation]
+
+=imap2exchange Documentation=
+
 ==Introduction==
 
 This is an attempt to explain how the imap2exchange conversion works so that users can see how to extend Yale's implementation to fit their own needs.
