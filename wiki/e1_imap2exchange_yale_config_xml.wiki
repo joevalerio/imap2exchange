@@ -1,3 +1,6 @@
+
+==imap2exchange-yale-config.xml==
+
 This file creates a yaleBatchLoader to create conversions from a file.  The format of the file is" netid, sourcePo.  This file can be used to run your batch conversions, or you can write your own.  You will see in more complicated examples why this file was separated from the main imap2exchange-config.xml
 
 {{{
