@@ -1,6 +1,6 @@
 [http://code.google.com/p/imap2exchange/ Home] | [examples] | [Example1] | [e1_batchUsers batchUsers]
 
-==batchUsers==
+=batchUsers=
 
 {{{
 netid1, email1.mydomain.edu
