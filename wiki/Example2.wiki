@@ -7,5 +7,5 @@ In this example I have configured the tool to do a plain vanilla batch conversio
 || File || Change ||
 ||[e2_imap2exchange_config_xml imap2exchange-config.xml] || Here you can see that I define the preConversionAction and inject it in the ExchangeConversionFactory||
 ||[e2_imap2exchange_yale_config_xml imap2exchange-yale-config.xml]|| Here you can see that I instantiate the two ImapMailboxSizers and alias the preConversionAction for sanity's sake in the properties file ||
-||[imapservers.xml|imapservers.xml - mailbox size checker] || In this file you can see where I injected the previously defined ImapMailboxSizers into the ImapServers for the preConversionAction to use. ||
-||[imap2exchange-config.properties|imap2exchange-config.properties - mailbox size checker]|| In here you can see that I define the values of the properties for the fore mentioned objects. ||
+||[e2_imapservers_xml imapservers.xml] || In this file you can see where I injected the previously defined ImapMailboxSizers into the ImapServers for the preConversionAction to use. ||
+||[e2_imap2exchange_config_properties imap2exchange-config.properties]|| In here you can see that I define the values of the properties for the fore mentioned objects. ||
