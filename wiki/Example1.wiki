@@ -6,7 +6,7 @@ In this example I have configured the tool to do a plain vanilla batch conversio
 
 There are four configuration files that are used to initialize the environment via Spring, and the user file.  They are:
 
-|| File || Purpose||
+|| *File* || *Purpose* ||
 ||[e1_imap2exchange_config_xml imap2exchange-config.xml]||This file creates the object factories and their relationships.||
 ||[e1_imap2exchange_yale_config_xml imap2exchange-yale-config.xml]||This file creates yale specific implementations.  You may choose to use these.||
 ||[e1_imapservers_xml imapservers.xml]||This is where the imapservers are configured to their ImapServerFactory||
