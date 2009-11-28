@@ -1,4 +1,8 @@
-}}}
+[http://code.google.com/p/imap2exchange/ Home] | [examples] | [Example2] | [e2_imap2exchange_config_xml imap2exchange-config.xml]
+
+=imap2exchange-config.xml=
+
+{{{
 <?xml version="1.0" encoding="UTF-8"?>
 <beans
    xmlns="http://www.springframework.org/schema/beans"
