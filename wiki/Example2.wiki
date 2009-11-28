@@ -2,7 +2,7 @@
 
 ==batch conversion with mailbox size checker==
 
-In this example I have configured the tool to do a plain vanilla batch conversion, plus I user Yale's ImapMailboxSizer.  If you want to use a mailbox sizer, you will have to implement one.  We have two different source email systems, one system has a web site that I modified to create a quick WS type page to get me the size of a users mailbox.  The other system, I rely on a flat file rsync'ed to my config directory with uids and their mailbox sizes.  I will eventually write a generic IMAP sizer, but it will be slow, especially for UW servers.  So in the short term you will have to implement your own.
+In this example I have configured the tool to do a plain vanilla batch conversion, plus I user Yale's ImapMailboxSizer.  If you want to use a mailbox sizer, you will have to implement one.  We have two different source email systems, one system has a web site that I modified to create a quick WS type page to get me the size of a users mailbox.  The other system, I rely on a flat file rsync'ed to my config directory with uids and their mailbox sizes. 
 
 || File || Change ||
 ||[imap2exchange-config.xml|imap2exchange-config.xml - mailbox size checker] || Here you can see that I define the preConversionAction and inject it in the ExchangeConversionFactory||
