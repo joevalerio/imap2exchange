@@ -1,6 +1,6 @@
 [http://code.google.com/p/imap2exchange/ Home] | [ExchangeWebServices Intro to Exchange Web Services] 
 
-=Intro to Exchange Web Services=
+=Introduction to Exchange Web Services=
 
 ==Configuring Exchange for Web Services==
 
