@@ -4,5 +4,5 @@
 
 In this example builds on the mailbox size checker example.  Here we add the functionality to merge Imap folders into Exchange System Folders.
 
-|| File || Change ||
+|| *File* || *Change* ||
 ||[e3_imap2exchange_config_xml imap2exchange-config.xml] || Here you can see that I define two altNames and group them in an altNames object which is injected into the ExchangeConversionFactory. Please note that there is no need to enter "trash" and "Trash" as the folder names are always compared case insensitive.||
