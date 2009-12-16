@@ -3,6 +3,7 @@ package edu.yale.its.tp.email.conversion.yale;
 
 import java.io.File;
 import java.util.*;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -77,8 +78,26 @@ public class YaleExchangeConversionCmdLineUtil implements NoMoreConversionsListe
 	 * @throws Exception
 	 */
 	public static void main(String[] args) throws Exception{
+		if(logger.isDebugEnabled())
+			printEnv();
 		YaleExchangeConversionCmdLineUtil yc = new YaleExchangeConversionCmdLineUtil(args);
 		yc.startConversion();
+	}
+	
+	public static void printEnv(){
+		logger.debug("=========================================");
+		logger.debug(" Java System Properties");
+		logger.debug("=========================================");
+		List<String> keys = new ArrayList<String>();
+		for(Object k : System.getProperties().keySet()){
+			keys.add(String.valueOf(k));
+		}
+		Collections.sort(keys);
+		for(Object k : keys){
+			String key = String.valueOf(k);
+			logger.debug(key + ": " + System.getProperty(key));
+		}
+		logger.debug("=========================================");
 	}
 	
 	/** 
