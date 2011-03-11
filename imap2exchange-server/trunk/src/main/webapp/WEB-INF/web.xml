@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE web-app PUBLIC '-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN' 'http://java.sun.com/dtd/web-app_2_3.dtd'>
+<web-app xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+
+    <display-name>imap2exchange Conversion Utility</display-name>
+    <description>imap2exchange Conversion Utility</description>
+
+    <context-param>
+    	<param-name>log4jConfigLocation</param-name>
+        <param-value>/WEB-INF/log4j.properties</param-value>
+    </context-param>
+    <listener>
+    	<listener-class>org.springframework.web.util.Log4jConfigListener</listener-class>
+    </listener>
+ 
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>		
+			/WEB-INF/imap2exchange-config.xml	
+			/WEB-INF/imap2exchange-yale-config.xml	
+			/WEB-INF/imapservers.xml	
+		</param-value>
+	</context-param>
+	
+    <listener>
+    	<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+    </listener>
+
+		<!-- CAS Filter             -->
+		<!--============================-->
+		<filter>
+        	<filter-name>CASFilter</filter-name>
+	        <filter-class>edu.yale.its.tp.cas.client.filter.CASFilter</filter-class>
+    	    <init-param>
+        		<param-name>edu.yale.its.tp.cas.client.filter.loginUrl</param-name>
+                <param-value>https://secure.its.yale.edu/cas/login</param-value>
+	        </init-param>
+    	    <init-param>
+        	    <param-name>edu.yale.its.tp.cas.client.filter.validateUrl</param-name>
+                <param-value>https://secure.its.yale.edu/cas/serviceValidate</param-value>
+	        </init-param>
+    	    <init-param>
+        	    <param-name>edu.yale.its.tp.cas.client.filter.wrapRequest</param-name>
+                <param-value>true</param-value>
+	        </init-param>
+    	    <init-param>
+	            <param-name>edu.yale.its.tp.cas.client.filter.serverName</param-name>
+                <param-value>secure2.its.yale.edu</param-value>
+        	</init-param>
+		</filter>
+
+		<filter-mapping>
+			<filter-name>CASFilter</filter-name>
+			<url-pattern>/*</url-pattern>
+		</filter-mapping>
+
+		<!-- ACL Filter                 -->
+		<!--============================-->
+		<filter>
+		    <filter-name>ACLFilter</filter-name>
+        	<filter-class>edu.yale.its.tp.mail.imap2exchange.server.ACLFilter</filter-class>
+		</filter>
+
+		<filter-mapping>
+			<filter-name>ACLFilter</filter-name>
+			<url-pattern>/*</url-pattern>
+		</filter-mapping>
+
+
+		<!-- AddConversion Servlet     -->
+		<!--============================-->
+        <servlet>
+          <servlet-name>addConversion</servlet-name>
+          <servlet-class>edu.yale.its.tp.mail.imap2exchange.server.AddConversionServlet</servlet-class>
+        </servlet>
+        
+        <servlet-mapping>
+          <servlet-name>addConversion</servlet-name>
+          <url-pattern>/addConversion</url-pattern>
+        </servlet-mapping>
+
+		<!-- Memory Management Servlets -->
+		<!--============================-->
+        <servlet>
+          <servlet-name>JstatChart</servlet-name>
+          <servlet-class>edu.yale.its.tp.java.monitor.JStatChartServlet</servlet-class>
+        </servlet>
+        
+        <servlet-mapping>
+          <servlet-name>JstatChart</servlet-name>
+          <url-pattern>/memoryChart.png</url-pattern>
+        </servlet-mapping>
+
+		<servlet>
+            <servlet-name>GCMonitor</servlet-name>
+            <servlet-class>edu.yale.its.tp.java.monitor.GCMonitorServlet</servlet-class>
+	        <init-param>
+	            <param-name>memory.pool</param-name>
+	            <param-value>CMS Old Gen</param-value>
+	        </init-param>
+	        <init-param>
+	            <param-name>threshold</param-name>
+	            <param-value>2048</param-value><!-- 2 Gb --> 
+	        </init-param>
+	        <init-param>
+	            <param-name>max.cnt</param-name>
+	            <param-value>3</param-value>
+	        </init-param>
+	        <init-param>
+	            <param-name>interval</param-name>
+	            <param-value>1800</param-value><!-- 1/2 hour -->
+	        </init-param>
+	        <load-on-startup>1</load-on-startup>
+        </servlet>
+        
+        <servlet-mapping>
+          <servlet-name>GCMonitor</servlet-name>
+          <url-pattern>/GCMonitor</url-pattern>
+        </servlet-mapping>
+
+        <welcome-file-list>
+            <welcome-file>index.html</welcome-file>
+            <welcome-file>index.htm</welcome-file>
+            <welcome-file>index.jsp</welcome-file>
+        </welcome-file-list>
+        
+</web-app>

@@ -1,0 +1,57 @@
+# Exchange Server Information for WS
+###################################################
+exchangeServer.uri=
+exchangeServer.adDomain=
+exchangeServer.uid=
+exchangeServer.pwd=
+exchangeServer.maxReconnects=5
+
+# AD info to find users 
+# UPN and default email Address.
+###################################################
+#ad.uri=yu.yale.local
+ad.uri=
+ad.port=636
+ad.uid=
+ad.pwd=
+ad.base=
+
+# Max number of conversion theads to run at 
+# once.  I recommend no more than 5 in a server
+# that can allocate only 2Gb of memory
+# cached threads need to be the max
+# number of user you plan to start per
+# conversion session.
+###################################################
+exchangeConversionManager.maxRunningThreads=5
+exchangeConversionManager.maxCachedThreads=1024
+
+# Imap Servers
+# The server objects need to be defined in the
+# imapservers.xml file
+###################################################
+emailserver1.uri=
+emailserver1.port=993
+emailserver1.protocol=imaps
+emailserver1.adminUid=
+emailserver1.adminPwd=
+emailserver1.sasl=false
+
+###################################################
+# Yale Specific Configuration Items follow...
+###################################################
+
+# Yale's User file for batch loads
+###################################################
+#yaleBatchLoader.userFile=config/conv-users
+
+userSetupAction.netidAttribute=cn
+userSetupAction.upnAttribute=userPrincipalName
+userSetupAction.smtpAttribute=mail
+userSetupAction.userObject=cn=Users
+userSetupAction.somUserObject=ou=SOM,ou=Users-OU
+
+#mailboxSizeChecker.maxMailboxSize=786432000
+#centralImapMailboxSizer.url=https://config.mail.yale.edu/account-tool-dev/usage
+#medImapMailboxSizer.emailFile=/usr/local/tomcat_instances/exchange-conversion-manager/tomcat/webapps/imap2exchange-server/WEB-INF/quota.email
+#medImapMailboxSizer.omegaFile=/usr/local/tomcat_instances/exchange-conversion-manager/tomcat/webapps/imap2exchange-server/WEB-INF/quota.omega

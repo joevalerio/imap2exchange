@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans
+   xmlns="http://www.springframework.org/schema/beans"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xmlns:utils="http://www.chariotsolutions.com/spring/schema/utils"
+   xsi:schemaLocation="http://www.springframework.org/schema/beans
+                       http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+
+
+    <bean id="imapServerFactory" 
+          parent="imapServerFactoryImpl" />
+
+    <bean id="imapServerFactoryImpl" 
+          class="edu.yale.its.tp.email.conversion.yale.YaleImapServerFactory"
+          scope="singleton">
+          <property name="connectionPoolSize" value="50"/>
+          <property name="imapServers">
+          	  <list>
+				<!-- UW Pantheon Servers -->    
+		       	<ref local="pantheon-po05"/>
+		       	<ref local="pantheon-po06"/>
+		       	<ref local="pantheon-po07"/>
+		       	<ref local="pantheon-po08"/>
+		       	<ref local="pantheon-po09"/>
+		       	<ref local="pantheon-po10"/>
+		       	<ref local="pantheon-po11"/>
+		       	<ref local="pantheon-po12"/>
+		       	<ref local="pantheon-po13"/>
+		       	<ref local="pantheon-po14"/>
+		       	<ref local="pantheon-po15"/>
+		       	<ref local="pantheon-po16"/>
+		       	<ref local="pantheon-po17"/>
+		       	<ref local="pantheon-po18"/>
+		       	<ref local="pantheon-po19"/>
+		       	<ref local="pantheon-po20"/>
+		       	<ref local="pantheon-po21"/>
+		       	<ref local="pantheon-po22"/>
+		       	<ref local="pantheon-po23"/>
+		       	<ref local="pantheon-po24"/>
+		       	<ref local="pantheon-po25"/>
+ 
+				<!-- Med School Servers -->
+		       	<ref local="email-med"/>
+		       	<ref local="omega-med"/>
+
+				<!-- Cyrus Servers -->
+		       	<ref local="pantheon-potest01"/>
+
+          	  </list>
+          </property>
+    </bean>
+
+	<!-- UW Pantheon Servers -->    
+    <bean id="pantheon-po05"     class="edu.yale.its.tp.email.conversion.imap.ImapServer">
+    	<property name="sizer"><ref bean="centralImapMailboxSizer"/></property>
+    </bean>
+    <bean id="pantheon-po06"     class="edu.yale.its.tp.email.conversion.imap.ImapServer">
+    	<property name="sizer"><ref bean="centralImapMailboxSizer"/></property>
+    </bean>
+    <bean id="pantheon-po07"     class="edu.yale.its.tp.email.conversion.imap.ImapServer">
+    	<property name="sizer"><ref bean="centralImapMailboxSizer"/></property>
+    </bean>
+    <bean id="pantheon-po08"     class="edu.yale.its.tp.email.conversion.imap.ImapServer">
+    	<property name="sizer"><ref bean="centralImapMailboxSizer"/></property>
+    </bean>
+    <bean id="pantheon-po09"     class="edu.yale.its.tp.email.conversion.imap.ImapServer">
+    	<property name="sizer"><ref bean="centralImapMailboxSizer"/></property>
+    </bean>
+    <bean id="pantheon-po10"     class="edu.yale.its.tp.email.conversion.imap.ImapServer">
+    	<property name="sizer"><ref bean="centralImapMailboxSizer"/></property>
+    </bean>
+    <bean id="pantheon-po11"     class="edu.yale.its.tp.email.conversion.imap.ImapServer">
+    	<property name="sizer"><ref bean="centralImapMailboxSizer"/></property>
+    </bean>
+    <bean id="pantheon-po12"     class="edu.yale.its.tp.email.conversion.imap.ImapServer">
+    	<property name="sizer"><ref bean="centralImapMailboxSizer"/></property>
+    </bean>
+    <bean id="pantheon-po13"     class="edu.yale.its.tp.email.conversion.imap.ImapServer">
+    	<property name="sizer"><ref bean="centralImapMailboxSizer"/></property>
+    </bean>
+    <bean id="pantheon-po14"     class="edu.yale.its.tp.email.conversion.imap.ImapServer">
+    	<property name="sizer"><ref bean="centralImapMailboxSizer"/></property>
+    </bean>
+    <bean id="pantheon-po15"     class="edu.yale.its.tp.email.conversion.imap.ImapServer">
+    	<property name="sizer"><ref bean="centralImapMailboxSizer"/></property>
+    </bean>
+    <bean id="pantheon-po16"     class="edu.yale.its.tp.email.conversion.imap.ImapServer">
+    	<property name="sizer"><ref bean="centralImapMailboxSizer"/></property>
+    </bean>
+    <bean id="pantheon-po17"     class="edu.yale.its.tp.email.conversion.imap.ImapServer">
+    	<property name="sizer"><ref bean="centralImapMailboxSizer"/></property>
+    </bean>
+    <bean id="pantheon-po18"     class="edu.yale.its.tp.email.conversion.imap.ImapServer">
+    	<property name="sizer"><ref bean="centralImapMailboxSizer"/></property>
+    </bean>
+    <bean id="pantheon-po19"     class="edu.yale.its.tp.email.conversion.imap.ImapServer">
+    	<property name="sizer"><ref bean="centralImapMailboxSizer"/></property>
+    </bean>
+    <bean id="pantheon-po20"     class="edu.yale.its.tp.email.conversion.imap.ImapServer">
+    	<property name="sizer"><ref bean="centralImapMailboxSizer"/></property>
+    </bean>
+    <bean id="pantheon-po21"     class="edu.yale.its.tp.email.conversion.imap.ImapServer">
+    	<property name="sizer"><ref bean="centralImapMailboxSizer"/></property>
+    </bean>
+    <bean id="pantheon-po22"     class="edu.yale.its.tp.email.conversion.imap.ImapServer">
+    	<property name="sizer"><ref bean="centralImapMailboxSizer"/></property>
+    </bean>
+    <bean id="pantheon-po23"     class="edu.yale.its.tp.email.conversion.imap.ImapServer">
+    	<property name="sizer"><ref bean="centralImapMailboxSizer"/></property>
+    </bean>
+    <bean id="pantheon-po24"     class="edu.yale.its.tp.email.conversion.imap.ImapServer">
+    	<property name="sizer"><ref bean="centralImapMailboxSizer"/></property>
+    </bean>
+    <bean id="pantheon-po25"     class="edu.yale.its.tp.email.conversion.imap.ImapServer">
+    	<property name="sizer"><ref bean="centralImapMailboxSizer"/></property>
+    </bean>
+
+	<!-- Med School Servers -->
+    <bean id="email-med"         class="edu.yale.its.tp.email.conversion.imap.ImapServer">
+    	<property name="sizer"><ref bean="medImapMailboxSizer"/></property>
+    </bean>
+    <bean id="omega-med"         class="edu.yale.its.tp.email.conversion.imap.ImapServer">
+    	<property name="sizer"><ref bean="medImapMailboxSizer"/></property>
+    </bean>
+
+	<!-- Cyrus Servers -->
+    <bean id="pantheon-potest01" class="edu.yale.its.tp.email.conversion.imap.ImapServer"/>
+
+</beans>
