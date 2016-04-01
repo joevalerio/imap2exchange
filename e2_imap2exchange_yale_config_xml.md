@@ -1,0 +1,43 @@
+[Home](http://code.google.com/p/imap2exchange/) | [examples](examples.md) | [Example2](Example2.md) | [imap2exchange-yale-config.xml](e2_imap2exchange_yale_config_xml.md)
+
+# imap2exchange-yale-config.xml #
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<beans
+   xmlns="http://www.springframework.org/schema/beans"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xmlns:utils="http://www.chariotsolutions.com/spring/schema/utils"
+   xsi:schemaLocation="http://www.springframework.org/schema/beans
+                       http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+
+
+	<!-- Yale Batch Loader
+	     ==========================================================-->
+	<bean id="yaleBatchLoader"
+	      class="edu.yale.its.tp.email.conversion.yale.YaleBatchLoader"
+	      scope="singleton"/>
+
+	<!-- Mailbox sizers
+	     Yale's Exchange Server has Quotas, so we need to know the
+	     sizes of the legacy mail stores.  These get it.
+	     ==========================================================-->
+	<bean id="centralImapMailboxSizer"
+	      class="edu.yale.its.tp.email.conversion.yale.CentralImapMailboxSizer"
+	      scope="singleton"/>
+          
+	<bean id="medImapMailboxSizer"
+	      class="edu.yale.its.tp.email.conversion.yale.MedImapMailboxSizer"
+	      scope="singleton"/>
+	      
+	<!-- Just renaming the preconversion action to make sense in the
+	     configuration file.  Ignore this.
+	     ==========================================================-->
+        <alias name="preConversionActionImpl"
+               alias="mailboxSizeCheckerImpl" />
+		  
+        <alias name="mailboxSizeCheckerImpl"
+               alias="mailboxSizeChecker" />
+
+</beans>
+```

@@ -1,0 +1,76 @@
+[Home](http://code.google.com/p/imap2exchange/) | [examples](examples.md) | [Example2](Example2.md) | [imap2exchange-config.properties](e2_imap2exchange_config_properties.md)
+
+# imap2exchange-config.properties #
+
+```
+# Exchange Server Information for WS
+###################################################
+exchangeServer.uri=https://my.exchange.cas.server.edu/ews/exchange.asmx
+exchangeServer.adDomain=mydomain
+exchangeServer.uid=ewsuid
+exchangeServer.pwd=ewspwd
+
+# AD info to find users 
+# UPN and default email Address.
+###################################################
+ad.uri=mydomain.edu
+ad.port=636
+ad.uid=aduid
+ad.pwd=adpwd
+ad.base=dc=mydomain,dc=edu
+
+# User Setup Action
+###################################################
+userSetupAction.userObject=cn=Users
+userSetupAction.netidAttribute=cn
+userSetupAction.upnAttribute=userPrincipalName
+userSetupAction.smtpAttribute=mail
+
+# Max number of conversion theads to run at 
+# once.  I recommend no more than 5 in a server
+# that can allocate only 2Gb of memory
+# cached threads need to be the max
+# number of user you plan to start per
+# conversion session.
+###################################################
+exchangeConversionManager.maxRunningThreads=5
+exchangeConversionManager.maxCachedThreads=1024
+
+# Imap Servers
+# The server objects need to be defined in the
+# imapservers.xml file
+###################################################
+imapServer1.uri=email1.mydomain.edu
+imapServer1.port=993
+imapServer1.protocol=imaps
+imapServer1.adminUid=adminuid
+imapServer1.adminPwd=adminpwd
+imapServer1.sasl=false
+
+imapServer2.uri=email3.mydomain.edu
+imapServer2.port=993
+imapServer2.protocol=imaps
+imapServer2.adminUid=adminuid
+imapServer2.adminPwd=adminpwd
+imapServer2.sasl=false
+
+imapServer3.uri=email3.mydomain.edu
+imapServer3.port=993
+imapServer3.protocol=imaps
+imapServer3.adminUid=adminuid
+imapServer3.adminPwd=adminpwd
+imapServer3.sasl=false
+
+# Yale's User file for batch loads
+###################################################
+yaleBatchLoader.userFile=config/batchUsers
+
+# Mailbox Sizer Checkers
+# max size = 750MB
+###################################################
+mailboxSizeChecker.maxMailboxSize=786432000
+centralImapMailboxSizer.url=https://config.mail.yale.edu/account-tool-dev/usage
+medImapMailboxSizer.emailFile=config/quota.email
+medImapMailboxSizer.omegaFile=config/quota.omega
+
+```

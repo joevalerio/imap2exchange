@@ -1,0 +1,129 @@
+[Home](http://code.google.com/p/imap2exchange/) | [Documentation](Documentation.md)
+
+# imap2exchange Documentation #
+
+## Introduction ##
+
+This is an attempt to explain how the imap2exchange conversion works so that users can see how to extend Yale's implementation to fit their own needs.
+
+**Useful Information**
+
+> This conversion utility can be run again and again against the same data, and it will
+> only apply changes.  Every message is given a uid to determine what po it came from, as
+> well as the folder path and IMAP uid of the message.  This allow you to run the
+> conversion utility on a working exchange mailbox without modifying or deleting messages
+> not contained in the source Mailbox.  You could even merge multiple source mailboxes
+> into one exchange account...
+
+**WARNING - Use of Spring**
+> I rely on the use of [Spring](http://www.springframework.org) but I use it very lightly,
+> only to initialize my environment, and allow others to more easily substitute there
+> implementations for mine.  So if you have been living under a rock and have never heard
+> of Spring, please go check it out [here](http://www.springframework.org).
+
+
+## Key Players ##
+
+| **Class** | **Description** |
+|:----------|:----------------|
+| ExchangeConversionManager | The ExchangeConversionManager is the controller of all conversions.  This class contains a [ThreadPoolExceutor](http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/util/concurrent/ThreadPoolExecutor.html) that uses an [ArrayBlockingQueue](http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/util/concurrent/ArrayBlockingQueue.html) to queue conversions.  Since the conversion is of email(Text), there is the very real possibility of blowing out the JVM.  For this purpose we are using this method to maximize the number of concurrent conversions, while minimizing the risk of an [OutOfMemoryError](http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/lang/OutOfMemoryError.html). |
+| ExchangeConversion | The ExchangeConversion is a Runnable object that contains all the information need to convert a single users mail from a source IMAP store to a destination Exchange Store. |
+| User      | The object that contains information for the ExchangeConversion to use.  There is a one to one relationship between a User and a ExchangeConversion. |
+| FolderSynchronizer | The FolderSynchronizer uses a MessageSynchronizer to synchronize messages at the current folder level, and also synchronizes sub-folders. |
+| MessageSynchronizer | Synchronizes messages on the destination mail store from the source mail store.  It will create messages that don't exist on the destination, update changes to message read status, and remove messages from the destination if they have been removed from the source. |
+| UserFacotry | Makes Users     |
+| ImapServerFactory | Makes ImapServers |
+| ExchangeConversionFactory | Makes ExchangeConversion Runnables |
+
+## How it works ##
+
+
+### I. Create a User. ###
+
+Users are created from a UserFactory(YaleUserFactory) and their interface has the following properties:
+| **Property** | **Description** |
+|:-------------|:----------------|
+| uid          | set by our implemented UserFactory |
+| SourceImapPo | set by our implemented UserFactory |
+| UPN          | In our implementation this is set during the UserSetupAction prior to the preConversionAction |
+| primarySMTPAddress | In our implementation this is set during the UserSetupAction prior to the preConversionAction |
+| Conversion   | set in ExchangeConversionFactory |
+
+### II. Create an ExchangeConversion ###
+
+ExchangeConversions are created from an ExchangeConversionFactory.  The ExchangeConversionFactory requires a user to create an ExchangeConversion.  The properties of the ExchangeConversion that are set by the ExchangeConversionFactory are the following:
+| **Property** | **Description** |
+|:-------------|:----------------|
+| int maxMessageSize | Maximum Message Size allowed during the conversion.  This will impact your maxRequest size in IIS for Soap calls. |
+| int maxMessageGrpSize | This is the size of mail that you want to group together for one Soap call.  This size if the raw mail size.  The Soap message will be large than this number.  Each Message is Base64Excoded which increases the size of the message by approx. 5/4, and there is soap xml markup that wraps each message increasing the size of the soap call in the group. |
+| boolean isCleaner | This is a development utility to erase ALL messages in a ExchangeAccount.  This does not care the origin of the message. |
+| FolderAltNames altNames | These are folders alternate names that you want to merge with Exchange System Folders. i.e. "trash" and "Trash" into "Deleted Items" |
+| Map<String, PluggableConversionAction> | The three PluggableConversionActions: UserSetupAction, PreConversionAction, PostConversionAction |
+
+### III. Run ExchangeConversion ###
+
+
+#### A. UserSetupAction ####
+
+Once a conversion moves from the Queue to the Executor, the first step is to run the UserSetupAction.  I added this here as opposed to the UserFactory to minimize the work needed during the submission of a conversion to the ConversionManager.  In Yale's implementation this is where we lookup a users UPN, primarySMTPAddress, and set their ExchangeImperationationType.  Ours us unique to our AD implementation.  If you have all your users in one location, then you can use the edu.yale.its.tp.email.conversion.util.GenericUserSetupAction that will look for a netid(cn) in one location to set the same information on the User Object.  Please see Examples.
+
+#### B. PreConversionAction ####
+
+The PreConversionAction is a point cut for customizable code to execute prior to the actual conversion.  Since we are implementing quotas in exchange and have not been on our imap servers, I take advantage of this to check the size of the source mailbox.  I have written very Yale specific ImapMailboxSizers to return the size of a users imap store.  If it's large then the limit I don't continue with the conversion.  You can use this interface to do what ever you like prior to the conversion.
+
+#### C. Move/Update Mail in Exchange ####
+
+
+#### i. Index Folders ####
+
+The first step in moving the mail is to determine what mail needs to move, be update, or be deleted.  For this we must index the imap store and the exchange server.
+{warning:title=Warning - Merged Folders}
+Folders on the same level with the same name in mixed case will be merged (Thank Exchange\!).  If you have set AltFolders, these folders will be merged also.
+{warning}
+
+#### ii. Seperate Deleted from non-Deleted Messages ####
+
+Since Exchange Web Services does not expose the entire MAPI api, there is no way to set the deleted flag on the message [(See here.)|imap2exchange background information]. Because of this, I seperate the deleted items from the non-deleted items, and create/modify tagged deleted items in the "Deleted Items" folder in exchange.  Since every message is tagged with a conversion id I am able to determine the source of the messages in exchange and operate on the subset to messages in the "Deleted Items" folder that came from the folder
+
+#### iii. Group each set into maxMessageGrpSize ####
+Once we have determined what messages need to be created, we group them for efficiency.  Our max message size is 20 MB, and our maxMessageGroupSize is 5 MB.  Why the difference you ask?  Well for a single message we have to Base64Encode the MimeContent of the message and wrap it in a Soap call.  The markup for one messages is small, but if you have to wrap 1000 messages each 5 KB in size, then the markup becomes more destructive.  Plus the Base64Encoding increases the message size by approx 5/4ths.  Any how, this is why the maxMessageGrpSize is smaller that the maxMessageSize.  Any message greater that the maxMessageGrpSize is sent by itself.
+
+
+#### vi. Create New Messages ####
+Once we determine the group to move, we use javamail to get the MimeContent and write it directly to the Base64Encoder to minimize the char[.md](.md)'s created by java.  Here is the snippet of code that performs this operation for each messages in a group.  You will notice that I create the WS object MessageType in another method.  This method creates the UID extendedProperty for the message of type "$sourcePo:$sourceFolderPath:$messageUid".  This allows me to determine if this message was from this same folder, and allows me to ignore other messages in the folder that were not converted from this source mailbox.
+```
+for(Message sourceMessage : sourceMessages){
+  try{
+    // Create the Destination Message and set Props before I set the mime-content...
+    MessageType destMessage = createMessageType(user, sourceMessage);
+
+    // Convert MimeContent to Base64 and add it to the message.
+    baos = new ByteArrayOutputStream();
+    b64es = new  BASE64EncoderStream(baos);
+    sourceMessage.writeTo(b64es);
+    b64es.flush();
+				
+    MimeContentType mime = new MimeContentType();
+    mime.setValue(baos.toString());
+
+    destMessage.setMimeContent(mime);
+    destMessages.add(destMessage);
+
+    conv.addMessagesSize(sourceMessage.getSize());
+    conv.addMessagesCnt(1);
+			
+  } catch (Exception e){
+    throw new RuntimeException("Error getting message source MIME content.", e);
+  }
+}
+```
+
+#### v. Update Changed Messages ####
+Next we need to compare the metadata of messages that we have already moved.  If a difference is detected a modification is made to the destination message.
+
+#### vi. Remove Deleted Messages ####
+If messages are removed from the source folder, then they will be removed from the destination folder  If a message was marked deleted and before the next run the folder was purged, and the original destination folder would have been "Deleted Items", and it will be removed.
+
+
+#### D. PostConversionAction ####
+This is another point cut for users that want to perform some action post conversion.  If you want to perform some sort of mailbox verification, or normalization, it can be executed here.

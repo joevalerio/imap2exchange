@@ -1,0 +1,24 @@
+[Home](http://code.google.com/p/imap2exchange/) | [examples](examples.md) | [Example1](Example1.md) | [imap2exchange-yale-config.xml](e1_imap2exchange_yale_config_xml.md)
+
+# imap2exchange-yale-config.xml #
+
+This file creates a yaleBatchLoader to create conversions from a file.  The format of the file is" netid, sourcePo.  This file can be used to run your batch conversions, or you can write your own.  You will see in more complicated examples why this file was separated from the main imap2exchange-config.xml
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<beans
+   xmlns="http://www.springframework.org/schema/beans"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xmlns:utils="http://www.chariotsolutions.com/spring/schema/utils"
+   xsi:schemaLocation="http://www.springframework.org/schema/beans
+                       http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+
+
+	<!-- Yale Batch Loader
+	     ==========================================================-->
+	<bean id="yaleBatchLoader"
+	      class="edu.yale.its.tp.email.conversion.yale.YaleBatchLoader"
+	      scope="singleton"/>
+
+</beans>
+```
